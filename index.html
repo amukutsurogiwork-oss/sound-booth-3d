@@ -79,11 +79,11 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
 </div>
 
 <div id="c16-p2d" hidden>
-  <div class="c16-card"><h3>① 上から見た図</h3><div class="c16-draw"><svg id="c16-plan" viewBox="-760 -200 2280 2560" role="img" aria-label="C16 上から見た図"></svg></div>
+  <div class="c16-card"><h3>① 上から見た図</h3><div class="c16-draw"><svg id="c16-plan" viewBox="-790 -230 2320 2630" role="img" aria-label="C16 上から見た図"></svg></div>
     <p class="c16-note">右と上の灰色の線が部屋の壁（角置き）。扉は左、蝶番は手前側で外に開きます。背中側の消音箱は、ブースの横・上・底の壁を後ろへ延ばして一つの箱にしています。</p></div>
-  <div class="c16-card"><h3>② 消音箱の中（ふたを外した図）</h3><div class="c16-draw"><svg id="c16-sil" viewBox="-330 -200 1700 2010" role="img" aria-label="C16 消音箱の中"></svg></div>
+  <div class="c16-card"><h3>② 消音箱の中（ふたを外した図）</h3><div class="c16-draw"><svg id="c16-sil" viewBox="-340 -230 1840 2130" role="img" aria-label="C16 消音箱の中"></svg></div>
     <p class="c16-note">後ろから見た向き（ふたを外した状態、左＝扉側）。給気・排気とも「通路 → 折り返し室 → 通路 → 折り返し室 → 通路」の5部屋。部屋どうしは壁の口（50）でつながり、給気と排気は真ん中の厚い仕切りで完全に分かれています。</p></div>
-  <div class="c16-card"><h3>③ 横から見た断面</h3><div class="c16-draw"><svg id="c16-sec" viewBox="-200 -200 1850 2220" role="img" aria-label="C16 横から見た断面"></svg></div>
+  <div class="c16-card"><h3>③ 横から見た断面</h3><div class="c16-draw"><svg id="c16-sec" viewBox="-200 -230 1800 2290" role="img" aria-label="C16 横から見た断面"></svg></div>
     <p class="c16-note">左が正面（机側）、右が背中側。後ろの壁の上の穴から新しい空気が入り、下の穴から出ていきます。ふたは二重（板＋空気層＋板）。</p></div>
 </div>
 
@@ -518,7 +518,10 @@ $('c16-t-door').onclick=()=>{st.doorOpen=!st.doorOpen;$('c16-t-door').textConten
 $('c16-air').onclick=()=>{st.air=!st.air;$('c16-air').classList.toggle('active',st.air);draw();};
 const view=(y,p,z)=>{st.yaw=y;st.pitch=p;if(z)st.zoom=z;draw();};
 $('c16-vfront').onclick=()=>view(0,.15);$('c16-vback').onclick=()=>view(Math.PI,.15);$('c16-vtop').onclick=()=>view(-0.2,1.4);$('c16-vreset').onclick=()=>view(-0.6,.42,1);
-function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(d)requestAnimationFrame(resize);}
+// Fit each drawing's frame to what was actually drawn, so changing a dimension never clips it.
+function fitDrawings(){for(const id of ['c16-plan','c16-sil','c16-sec']){const s=$(id),bb=s.getBBox();if(bb.width)s.setAttribute('viewBox',[bb.x-30,bb.y-30,bb.width+60,bb.height+60].map(Math.round).join(' '));}}
+window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2d').hidden=false;fitDrawings();$('c16-p2d').hidden=h;});
+function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
 })();

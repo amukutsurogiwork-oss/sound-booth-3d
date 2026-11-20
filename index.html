@@ -451,7 +451,7 @@ function model(st){
     add(['door','foam'],C.foam,leaf(0,D.door.from,-Math.sin(a),Math.cos(a),D.door.w,-f,W,OH-W,-(W-f)));}
   else{box('door',C.door,0,D.door.from,W,W-f,D.door.from+D.door.w,OH-W);add(['door','foam'],C.foam,corners(W-f,D.door.from,W,W,D.door.from+D.door.w,OH-W)).only=[1,0,0];}
   const bf=add(['back','foam'],C.foam,corners(W-f,yBack,W,xr+f,yBack+f,OH-W));bf.only=[0,-1,0];const bw=box('back',C.wood,W-f,yBack+f,W,xr+f,ySil,OH-W);
-  for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bf.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2,Z(hy),D.hole/2,'y')});bw.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+2,Z(hy),D.hole/2,'y')});}
+  for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bf.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2,Z(hy),D.hole/2,'y')});bw.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+2,Z(hy),D.hole/2,'y')},{n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack+f-2,Z(hy),D.hole/2,'y')});}
   box('desk',C.desk,W,W,W+D.desk.h-30,W+D.in.w,W+D.desk.d,W+D.desk.h); // supported by the side walls; legroom stays open
   for(const [x,y,w,h] of SIL.parts)box('sil',C.part,W+x,ySil,Z(y+h),W+x+w,yLid,Z(y));
   const b2=105*Math.PI/180;
@@ -524,5 +524,6 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
+window.C16_TEST={model:()=>model(st)};
 })();
 </script></body></html>

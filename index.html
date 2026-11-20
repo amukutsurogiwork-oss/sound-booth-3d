@@ -474,7 +474,7 @@ function model(st){
   const mesh=(g,c,tris)=>{B.push({g,c,tris});};
   const Z=y=>OH-W-y,yc=ySil+D.sil/2,P=D.ply,o=P.outer,ia=o+P.air,ib=ia+P.inner,f=D.foam,pb=D.pyr.base,ph=f-pb,pp=D.pyr.pitch,iw=D.in.w,top=OH-W;
   // a lined surface: inner board (part of the wall group) + foam base + pyramids (foam group)
-  const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia));const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
+  const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia)).layer=true;const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));board.layer=true;const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
     mesh([g,'foam'],C.foam,pyramids(M,u0,u1,v0,v1,ib+pb,ph,pp,skip));fb.board=board;return fb;};
   const skin=(...r)=>{const b=box(...r);b.skin=true;return b;};
   skin('floor',C.woodDark,0,0,0,OW,yLid,W);
@@ -525,7 +525,7 @@ function flows(){
 const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[3,2,6,7],[0,3,7,4],[1,2,6,5]];
 const cv=document.getElementById('c16-cv'),stage=document.getElementById('c16-stage'),ctx=cv.getContext('2d');
 const st={yaw:-0.6,pitch:0.42,zoom:1,air:false,doorOpen:true,lidOpen:true,hide:new Set()};
-let Wc=0,Hc=0,dpr=1;
+let Wc=0,Hc=0,dpr=1,lastOrder=[];
 // World x runs from the seated person's left (door side) to their right, so the view mirrors x.
 function rot(x,y,z){const cs=Math.cos(st.yaw),sn=Math.sin(st.yaw),cp=Math.cos(st.pitch),sp=Math.sin(st.pitch),x1=x*cs-y*sn,y1=x*sn+y*cs;return {x:x1,y:z*cp+y1*sp,d:y1*cp-z*sp};}
 function proj(p){return rot(OW/2-p[0],p[1]-OD/2,p[2]-OH/2);}
@@ -533,28 +533,48 @@ function viewDepthOfNormal(n){return rot(-n[0],n[1],n[2]).d;}
 const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 function faceNormal(v,f,cen){const p=f.map(i=>v[i]);let n=cross(sub(p[1],p[0]),sub(p[3],p[0]));if(dot(n,n)<1e-9)n=cross(sub(p[2],p[1]),sub(p[0],p[1]));
   const fc=p.reduce((s,q)=>[s[0]+q[0]/4,s[1]+q[1]/4,s[2]+q[2]/4],[0,0,0]);if(dot(n,sub(fc,cen))<0)n=n.map(x=>-x);const L=Math.hypot(...n);return n.map(x=>x/L);}
+// Faces glued to another board (same plane, facing each other) can never be seen; drop them once per model state.
+let vmKey='',vmCache=null;
+function visibleModel(){
+  const key=[st.doorOpen,st.lidOpen,[...st.hide].sort().join()].join('|');if(key===vmKey)return vmCache;
+  const M=model(st),faces=[];
+  for(const b of M){if(!b.v)continue;const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);b.covered=[];
+    FACES.forEach((f,fi)=>{const p=f.map(i=>b.v[i]),n=faceNormal(b.v,f,cen),c=p.reduce((a,q)=>[a[0]+q[0]/4,a[1]+q[1]/4,a[2]+q[2]/4],[0,0,0]);faces.push({b,fi,p,n,c,off:dot(n,p[0])});});}
+  const inside=(pt,F)=>{let pos=0,neg=0;for(let k=0;k<4;k++){const a=F.p[k],b2=F.p[(k+1)%4],v=dot(cross(sub(b2,a),sub(pt,a)),F.n);if(v>1e-6)pos++;else if(v<-1e-6)neg++;}return !(pos&&neg);};
+  for(const A of faces)for(const B of faces){if(A.b===B.b||dot(A.n,B.n)>-.999||Math.abs(A.off+B.off)>.6)continue;if(inside(A.c,B)){A.b.covered[A.fi]=true;break;}}
+  // Cut edges of wall layers that face a nearby board (a closed corner pocket) are hidden too.
+  const boxes=M.filter(b=>b.v).map(b=>{const xs=b.v.map(q=>q[0]),ys=b.v.map(q=>q[1]),zs=b.v.map(q=>q[2]),lo=[Math.min(...xs),Math.min(...ys),Math.min(...zs)],hi=[Math.max(...xs),Math.max(...ys),Math.max(...zs)];
+    const vol=(hi[0]-lo[0])*(hi[1]-lo[1])*(hi[2]-lo[2]),aa=b.v.every(q=>q.every((x,k)=>Math.abs(x-lo[k])<.01||Math.abs(x-hi[k])<.01));return aa&&vol>0?{b,lo,hi}:null;}).filter(Boolean);
+  const solidAt=(pt,self)=>boxes.some(X=>X.b!==self&&pt.every((x,k)=>x>X.lo[k]+.01&&x<X.hi[k]-.01));
+  for(const A of faces){if(!A.b.layer||A.b.covered[A.fi])continue;for(let t=2;t<=150;t+=4){if(solidAt(A.c.map((x,k)=>x+A.n[k]*t),A.b)){A.b.covered[A.fi]=true;break;}}}
+  vmKey=key;vmCache=M;return M;
+}
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,Wc,Hc);ctx.fillStyle='#f8fbfd';ctx.fillRect(0,0,Wc,Hc);
   const scale=Math.min(Wc,Hc)/2400*st.zoom,ox=Wc/2,oy=Hc/2+10,S2=pt=>[ox+pt.x*scale,oy-pt.y*scale];
-  const polys=[],front=[],mid=[OW/2,OD/2,OH/2];
+  // One depth-sorted list. Big faces are cut into small tiles so that sorting by tile centre keeps near and far parts in order.
+  const polys=[],TILE=220;
   const shade=(c,n,nd)=>{const light=.62+.38*Math.max(0,n[2]*.8+(-nd)*.35-n[0]*.2);return c.map(x=>Math.min(255,Math.round(x*light)));};
-  for(const b of model(st)){
-    if(b.tris){for(const t of b.tris){const nd=viewDepthOfNormal(t.n);if(nd>=0)continue;const pts=t.p.map(proj);(b.outside?front:polys).push({d:(pts[0].d+pts[1].d+pts[2].d)/3-1,pts,col:shade(b.c,t.n,nd),thin:true});}continue;}
-    const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]),pv=b.v.map(proj);
+  const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+  for(const b of visibleModel()){
+    if(b.tris){for(const t of b.tris){const nd=viewDepthOfNormal(t.n);if(nd>=0)continue;const pts=t.p.map(proj);polys.push({g:b.g,d:(pts[0].d+pts[1].d+pts[2].d)/3-1,pts,col:shade(b.c,t.n,nd),thin:true});}continue;}
+    const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);
     const thinAxis=b.only?(()=>{const e=[sub(b.v[1],b.v[0]),sub(b.v[3],b.v[0]),sub(b.v[4],b.v[0])].map(x=>Math.hypot(...x));const k=e.indexOf(Math.min(...e));return sub([b.v[1],b.v[3],b.v[4]][k],b.v[0]).map(x=>x/e[k]);})():null;
-    for(const f of FACES){
+    for(const [fi,f] of FACES.entries()){
+      if(b.covered&&b.covered[fi])continue;
       const n=faceNormal(b.v,f,cen),nd=viewDepthOfNormal(n);if(nd>=0||(thinAxis&&Math.abs(dot(n,thinAxis))<.99))continue;
-      const pts=f.map(i=>pv[i]),d=pts.reduce((s,p)=>s+p.d,0)/4;
-      // outer-hull faces and the door/lid are drawn after everything inside the hull
-      const fc=f.map(i=>b.v[i]).reduce((a,q)=>[a[0]+q[0]/4,a[1]+q[1]/4,a[2]+q[2]/4],[0,0,0]),L=(b.outside||(b.skin&&dot(n,sub(fc,mid))>0))?front:polys;
-      L.push({d,pts,col:shade(b.c,n,nd)});
-      for(const dc of b.decals)if(dot(dc.n,n)>.99)L.push({d:d-.5,pts:dc.p.map(proj),col:dc.c,flat:true});
+      const q=f.map(i=>b.v[i]),col=shade(b.c,n,nd),nu=Math.max(1,Math.ceil(Math.hypot(...sub(q[1],q[0]))/TILE)),nv=Math.max(1,Math.ceil(Math.hypot(...sub(q[3],q[0]))/TILE));
+      const at=(u,v)=>lerp(lerp(q[0],q[1],u),lerp(q[3],q[2],u),v);
+      for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const pts=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)].map(proj);
+        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col,tile:nu*nv>1});}
+      for(const dc of b.decals)if(dot(dc.n,n)>.99){const pts=dc.p.map(proj);polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/pts.length-3,pts,col:dc.c,flat:true});}
     }
   }
-  polys.sort((p,q)=>q.d-p.d);front.sort((p,q)=>q.d-p.d);polys.push(...front);
+  polys.sort((p,q)=>q.d-p.d);
+  lastOrder=polys.map(p=>{const xy=p.pts.map(S2);return {g:p.g,d:p.d,box:[Math.min(...xy.map(a=>a[0])),Math.min(...xy.map(a=>a[1])),Math.max(...xy.map(a=>a[0])),Math.max(...xy.map(a=>a[1]))]};});
   ctx.lineJoin='round';
   for(const p of polys){ctx.beginPath();p.pts.forEach((pt,i)=>{const [x,y]=S2(pt);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();
-    ctx.fillStyle=`rgb(${p.col})`;ctx.fill();if(!p.flat){ctx.strokeStyle=p.thin?'rgba(40,70,80,.25)':'rgba(40,50,60,.35)';ctx.lineWidth=p.thin?.6:1;ctx.stroke();}}
+    ctx.fillStyle=`rgb(${p.col})`;ctx.fill();if(p.tile){ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();}else if(!p.flat){ctx.strokeStyle=p.thin?'rgba(40,70,80,.25)':'rgba(40,50,60,.35)';ctx.lineWidth=p.thin?.6:1;ctx.stroke();}}
   if(st.air)for(const f of flows()){
     const pts=f.p.map(p=>S2(proj(p)));ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
     ctx.strokeStyle=f.c;ctx.lineWidth=Math.max(2.5,5*st.zoom*Math.min(Wc,Hc)/700);ctx.globalAlpha=.9;ctx.stroke();ctx.globalAlpha=1;
@@ -585,6 +605,6 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
-window.C16_TEST={model:()=>model(st)};
+window.C16_TEST={model:()=>model(st),view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
 })();
 </script></body></html>

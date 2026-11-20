@@ -396,7 +396,7 @@ function flow(s,pts,color,id){el(s,'polyline',{points:pts.map(p=>p.join(',')).jo
   for(const y of [yHu,yHl])rect(s,yBack,y-D.hole/2,W,D.hole,'fill:var(--paper);stroke:var(--ink);stroke-width:4');
   head(s,'c16sr','var(--red)');head(s,'c16sb','var(--blue)');
   flow(s,[[ySil+100,yHu],[yBack-200,yHu]],'var(--blue)','c16sb');flow(s,[[yBack-200,yHl],[ySil+100,yHl]],'var(--red)','c16sr');
-  rect(s,W,W+h-D.desk.h,D.desk.d,30,S.part);line(s,W+D.desk.d-30,W+h-D.desk.h+30,W+D.desk.d-30,W+h,S.ink);
+  rect(s,W,W+h-D.desk.h,D.desk.d,30,S.part);
   text(s,W+D.desk.d/2,W+h-D.desk.h-24,'机',{fs:40});
   text(s,W+D.in.d/2,W+h/2,'ブースの中',{fs:44,w:600});text(s,ySil+D.sil/2+12,W+h/4,'給気',{fs:36,fill:'var(--blue)',rot:-90});text(s,ySil+D.sil/2+12,W+3*h/4,'排気',{fs:36,fill:'var(--red)',rot:-90});
   text(s,yLid+D.lid+60,W+h/2,'点検ぶた（二重）',{fs:34,rot:-90,fill:'var(--blue)'});
@@ -406,7 +406,7 @@ function flow(s,pts,color,id){el(s,'polyline',{points:pts.map(p=>p.join(',')).jo
 
 (function table(){
   const rows=[['ブースの中の広さ（吸音材の内側・机込み）',`${D.in.w} × ${D.in.d} × 高さ ${D.in.h}`],['外の大きさ（消音箱・ふた込み）',`${OW} × ${OD} × 高さ ${OH}`],
-    ['壁の厚さ',String(W)],['机',`奥行 ${D.desk.d}・高さ ${D.desk.h}`],['扉',`左側・幅 ${D.door.w}・手前に蝶番・外開き`],
+    ['壁の厚さ',String(W)],['机',`奥行 ${D.desk.d}・高さ ${D.desk.h}・左右の壁で支える（脚・前板なし）`],['扉',`左側・幅 ${D.door.w}・手前に蝶番・外開き`],
     ['消音箱の通路の奥行',String(D.sil)],['点検ぶた',`厚さ ${D.lid}（板＋空気層＋板）・右に蝶番`],
     ['消音箱の部屋',`給気・排気とも5部屋（通路3＋折り返し室2）、折り返し室の幅 ${D.turn}`],
     ['仕切り板の厚さ',`${D.part}（給気/排気の境は ${D.mid}）`],['部屋どうしの口',`各 ${D.gap}（4か所 × 2系統）`],
@@ -441,7 +441,7 @@ function model(st){
   else box('door',C.door,0,D.door.from,W,60,D.door.from+D.door.w,OH-W);
   const bw=box('back',C.wood,W,yBack,W,W+D.in.w,ySil,OH-W);
   for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bw.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2,Z(hy),D.hole/2,'y')},{n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+2,Z(hy),D.hole/2,'y')});}
-  box('desk',C.desk,W,W,W+D.desk.h-30,W+D.in.w,W+D.desk.d,W+D.desk.h);box('desk',C.desk,W,W+D.desk.d-30,W,W+D.in.w,W+D.desk.d,W+D.desk.h-30);
+  box('desk',C.desk,W,W,W+D.desk.h-30,W+D.in.w,W+D.desk.d,W+D.desk.h); // supported by the side walls; legroom stays open
   for(const [x,y,w,h] of SIL.parts)box('sil',C.part,W+x,ySil,Z(y+h),W+x+w,yLid,Z(y));
   const b2=105*Math.PI/180;
   if(st.lidOpen)add('lid',C.lid,leaf(OW,OD,-Math.cos(b2),Math.sin(b2),OW,D.lid,0,OH));

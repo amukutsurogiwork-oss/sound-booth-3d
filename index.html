@@ -563,11 +563,15 @@ function draw(){
     for(const [fi,f] of FACES.entries()){
       if(b.covered&&b.covered[fi])continue;
       const n=faceNormal(b.v,f,cen),nd=viewDepthOfNormal(n);if(nd>=0||(thinAxis&&Math.abs(dot(n,thinAxis))<.99))continue;
-      const q=f.map(i=>b.v[i]),col=shade(b.c,n,nd),nu=Math.max(1,Math.ceil(Math.hypot(...sub(q[1],q[0]))/TILE)),nv=Math.max(1,Math.ceil(Math.hypot(...sub(q[3],q[0]))/TILE));
+      // Faces on the outside of the closed box are always in front of what is inside it: small tiles, and a little nearer.
+      const q=f.map(i=>b.v[i]),fc=q.reduce((a,p)=>[a[0]+p[0]/4,a[1]+p[1]/4,a[2]+p[2]/4],[0,0,0]);
+      const hull=(fc[0]<1&&n[0]<-.9)||(fc[0]>OW-1&&n[0]>.9)||(fc[1]<1&&n[1]<-.9)||((fc[1]>OD-1||Math.abs(fc[1]-yLid)<1)&&n[1]>.9)||(fc[2]<1&&n[2]<-.9)||(fc[2]>OH-1&&n[2]>.9);
+      const T=hull?120:TILE,bias=hull?60:0;
+      const col=shade(b.c,n,nd),nu=Math.max(1,Math.ceil(Math.hypot(...sub(q[1],q[0]))/T)),nv=Math.max(1,Math.ceil(Math.hypot(...sub(q[3],q[0]))/T));
       const at=(u,v)=>lerp(lerp(q[0],q[1],u),lerp(q[3],q[2],u),v);
       for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const pts=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)].map(proj);
-        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col,tile:nu*nv>1});}
-      for(const dc of b.decals)if(dot(dc.n,n)>.99){const pts=dc.p.map(proj);polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/pts.length-3,pts,col:dc.c,flat:true});}
+        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4-bias,pts,col,tile:nu*nv>1});}
+      for(const dc of b.decals)if(dot(dc.n,n)>.99){const pts=dc.p.map(proj);polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/pts.length-75-bias,pts,col:dc.c,flat:true});}
     }
   }
   polys.sort((p,q)=>q.d-p.d);

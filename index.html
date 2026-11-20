@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
-<title>AMONE 防音ブース｜C07（2D図面＋3D 統合ビュー）</title>
+<title>AMONE 防音ブース｜C16（最新）・C07</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#edf2f5;color:#1c3344;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif}
 header{background:#fff;padding:12px 14px 9px;border-bottom:1px solid #d9e1e6}h1{font-size:17px;margin:0 0 5px}small{font-size:11px;color:#516376}
@@ -31,6 +31,78 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
 #print-hint{display:none}
 @media print{#panel-3d,#modebar,.sheet-select,.hint{display:none!important}#panel-2d{display:block!important}.sheet{display:block!important;break-inside:avoid;page-break-after:always}.sheet-box svg{max-height:90vh}.spec{page-break-before:always}}
 </style></head><body>
+<section id="c16" aria-labelledby="c16-title">
+<style>
+#c16{--paper:#ffffff;--ink:#1d2733;--muted:#5d6b7a;--rule:#c9d2db;--wall:#dfe5ec;--wall-line:#3a4756;--red:#d33a2c;--blue:#1f63c6;--fan:#7a4fc0;--room:#9aa7b4;
+  margin:0;background:#f4f7f9;padding:0 0 8px}
+#c16 .c16-old{background:#176e9f;color:#fff;font-size:14px;font-weight:700;padding:12px 14px;margin:16px 0 0}
+#c16 .c16-head{background:#fff;padding:14px;border-bottom:1px solid #d9e1e6}
+#c16 h2{font-size:17px;margin:0 0 4px}
+#c16 .c16-sub{font-size:12px;color:#516376;margin:0;padding:0;line-height:1.6}
+#c16 .c16-modes{display:flex;gap:8px;padding:10px 12px;background:#fff;border-bottom:1px solid #d9e1e6}
+#c16 .c16-modes button{flex:1;font-size:15px;border-radius:12px}
+#c16 .c16-modes button.active{color:#fff;background:#176e9f;border-color:#176e9f}
+#c16 .c16-view{height:min(62vh,560px);min-height:340px;position:relative;background:#f8fbfd;touch-action:none;overflow:hidden}
+#c16 .c16-view canvas{display:block;width:100%;height:100%;touch-action:none}
+#c16 .c16-hint{position:absolute;bottom:8px;left:8px;font-size:11px;background:#ffffffed;padding:7px 9px;border-radius:6px;pointer-events:none}
+#c16 .c16-ctl{background:#fff;padding:10px;display:flex;gap:7px;flex-wrap:wrap;border-top:1px solid #d9e1e6}
+#c16 .c16-legend{display:flex;gap:6px 14px;flex-wrap:wrap;padding:8px 12px;font-size:11px;background:#fff}
+#c16 .c16-legend i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+#c16 .c16-card{background:#fff;margin:12px;border:1px solid #d8e1e7;border-radius:12px;overflow:hidden}
+#c16 .c16-card h3{font-size:14px;margin:0;padding:10px 12px;border-bottom:1px solid #e2e8ec}
+#c16 .c16-draw{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px}
+#c16 .c16-draw svg{display:block;width:100%;min-width:330px;max-width:760px;height:auto;margin:0 auto}
+#c16 .c16-draw svg text{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;fill:var(--ink)}
+#c16 .c16-draw svg .dim{font-family:ui-monospace,Menlo,monospace;fill:var(--muted)}
+#c16 .c16-note{color:#536777;font-size:12px;line-height:1.6;padding:6px 12px 10px}
+#c16 table{border-collapse:collapse;font-size:13px;width:100%}
+#c16 th,#c16 td{padding:7px 10px;border-bottom:1px solid #e2e8ec;text-align:left;vertical-align:top}
+#c16 th{width:44%;font-weight:500;color:#5b6d79}
+#c16 ol{margin:0;padding:10px 14px 12px 30px;font-size:13px;line-height:1.65}
+#c16 [hidden]{display:none!important}
+</style>
+<div class="c16-head">
+  <h2 id="c16-title">C16（最新）｜5室サイレンサー・吸排気独立</h2>
+  <p class="c16-sub">室内 幅1,000 × 奥行1,000 × 高さ1,600mm（机込み）／外寸 幅1,160 × 奥行1,390 × 高さ1,760mm。上の C07 はそのまま残しています。寸法はすべて仮で、施工用の確定図ではありません。</p>
+</div>
+<div class="c16-modes"><button type="button" id="c16-b3d" class="active">3Dモデル</button><button type="button" id="c16-b2d">2D図面</button></div>
+
+<div id="c16-p3d">
+  <div class="c16-view" id="c16-stage"><canvas id="c16-cv" aria-label="指で回せる C16 の3Dモデル"></canvas><div class="c16-hint">指1本：回転　指2本：拡大・縮小</div></div>
+  <div class="c16-legend"><span><i style="background:var(--blue)"></i>給気（左の口 → 吸1〜吸5 → 部屋の上の穴）</span><span><i style="background:var(--red)"></i>排気（部屋の下の穴 → 排1〜排5 → 左の口・ファン）</span></div>
+  <div class="c16-ctl">
+    <button type="button" id="c16-t-door">扉：閉</button><button type="button" id="c16-t-roof" class="active">天井：あり</button><button type="button" id="c16-t-left" class="active">左の壁：あり</button>
+    <button type="button" id="c16-t-front" class="active">正面の壁：あり</button><button type="button" id="c16-t-lid" class="active">消音箱のふた：あり</button><button type="button" id="c16-air">空気の流れ</button>
+    <button type="button" id="c16-vfront">正面から</button><button type="button" id="c16-vback">背中側から</button><button type="button" id="c16-vtop">上から</button><button type="button" id="c16-vreset">初期位置</button>
+  </div>
+</div>
+
+<div id="c16-p2d" hidden>
+  <div class="c16-card"><h3>① 上から見た図</h3><div class="c16-draw"><svg id="c16-plan" viewBox="-760 -200 2280 2560" role="img" aria-label="C16 上から見た図"></svg></div>
+    <p class="c16-note">右と上の灰色の線が部屋の壁（角置き）。扉は左、蝶番は手前側で外に開きます。背中側の消音箱は、ブースの横・上・底の壁を後ろへ延ばして一つの箱にしています。</p></div>
+  <div class="c16-card"><h3>② 消音箱の中（ふたを外した図）</h3><div class="c16-draw"><svg id="c16-sil" viewBox="-330 -200 1700 2010" role="img" aria-label="C16 消音箱の中"></svg></div>
+    <p class="c16-note">ブースの中から背中側を見た向き（左＝扉側）。給気・排気とも「通路 → 折り返し室 → 通路 → 折り返し室 → 通路」の5部屋。部屋どうしは壁の口（50）でつながり、給気と排気は真ん中の厚い仕切りで完全に分かれています。</p></div>
+  <div class="c16-card"><h3>③ 横から見た断面</h3><div class="c16-draw"><svg id="c16-sec" viewBox="-200 -200 1850 2220" role="img" aria-label="C16 横から見た断面"></svg></div>
+    <p class="c16-note">左が正面（机側）、右が背中側。後ろの壁の上の穴から新しい空気が入り、下の穴から出ていきます。ふたは二重（板＋空気層＋板）。</p></div>
+</div>
+
+<div class="c16-card"><h3>C07 からの変わり方</h3><ol>
+  <li>吸気と排気を、背中側の消音箱にまとめた（外とつながる口は左面の給気1・排気1だけ）。</li>
+  <li>消音箱の中を、給気・排気とも5部屋（通路3＋折り返し室2）の通り道にした。</li>
+  <li>部屋の上の穴から新しい空気が入り、下の穴から出る。ファンは排気側に1台。</li>
+  <li>扉は左側、手前の蝶番で外開き。背中側は全面の点検ぶた（二重）。</li>
+  <li>室内は 幅1,000 × 奥行1,000 × 高さ1,600（C07 は奥行1,200）。</li>
+</ol></div>
+<div class="c16-card"><h3>寸法の一覧（mm・仮）</h3><table id="c16-dims"></table></div>
+<div class="c16-card"><h3>まだ決まっていないこと</h3><ol>
+  <li>折り返し室の幅（今は 200）。</li>
+  <li>点検ぶたは右（部屋の角側）の蝶番。全開には後ろに約1.2mの空きが要ります。</li>
+  <li>給気口と排気口の高さの離れ（今は約30cm）。</li>
+  <li>ファン1台の風量、換気量、遮音の性能は未計算・未検証です。閉め切った使用は換気を確かめてから。</li>
+</ol></div>
+<div class="c16-old">ここから下は前の版（C07）</div>
+</section>
+
 <header><h1>AMONE 防音ブース｜図面ビュー C07</h1><small>室内幅1,000 × 奥行1,200 × 高さ1,600mm／外高1,700mm｜C06と同じ形状・寸法で2Dも表示</small></header>
 <div id="modebar"><button type="button" id="btn3d" class="active">3Dモデル</button><button type="button" id="btn2d">2D設計図</button></div>
 <section id="panel-3d">
@@ -76,68 +148,6 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
 <tr><th>吸音通路（仮）</th><td>山50 + 先端隙間10 + 山50</td></tr>
 <tr><th>机</th><td>970 × 315、4点支持</td></tr>
 </table><p class="footnote">音漏れ−20dBと自然換気の実現は未検証。閉め切った使用は安全な換気量が確認できてから。</p></section>
-<section id="c16" aria-labelledby="c16-title">
-<style>
-#c16{--paper:#ffffff;--ink:#1d2733;--muted:#5d6b7a;--rule:#c9d2db;--wall:#dfe5ec;--wall-line:#3a4756;--red:#d33a2c;--blue:#1f63c6;--fan:#7a4fc0;--room:#9aa7b4;
-  margin:28px 0 0;border-top:6px solid #176e9f;background:#f4f7f9;padding:0 0 24px}
-#c16 .c16-head{background:#fff;padding:14px;border-bottom:1px solid #d9e1e6}
-#c16 h2{font-size:17px;margin:0 0 4px}
-#c16 .c16-sub{font-size:12px;color:#516376;margin:0;padding:0;line-height:1.6}
-#c16 .c16-modes{display:flex;gap:8px;padding:10px 12px;background:#fff;border-bottom:1px solid #d9e1e6}
-#c16 .c16-modes button{flex:1;font-size:15px;border-radius:12px}
-#c16 .c16-modes button.active{color:#fff;background:#176e9f;border-color:#176e9f}
-#c16 .c16-view{height:min(62vh,560px);min-height:340px;position:relative;background:#f8fbfd;touch-action:none;overflow:hidden}
-#c16 .c16-view canvas{display:block;width:100%;height:100%;touch-action:none}
-#c16 .c16-hint{position:absolute;bottom:8px;left:8px;font-size:11px;background:#ffffffed;padding:7px 9px;border-radius:6px;pointer-events:none}
-#c16 .c16-ctl{background:#fff;padding:10px;display:flex;gap:7px;flex-wrap:wrap;border-top:1px solid #d9e1e6}
-#c16 .c16-legend{display:flex;gap:6px 14px;flex-wrap:wrap;padding:8px 12px;font-size:11px;background:#fff}
-#c16 .c16-legend i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
-#c16 .c16-card{background:#fff;margin:12px;border:1px solid #d8e1e7;border-radius:12px;overflow:hidden}
-#c16 .c16-card h3{font-size:14px;margin:0;padding:10px 12px;border-bottom:1px solid #e2e8ec}
-#c16 .c16-draw{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px}
-#c16 .c16-draw svg{display:block;width:100%;min-width:330px;max-width:760px;height:auto;margin:0 auto}
-#c16 .c16-draw svg text{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;fill:var(--ink)}
-#c16 .c16-draw svg .dim{font-family:ui-monospace,Menlo,monospace;fill:var(--muted)}
-#c16 .c16-note{color:#536777;font-size:12px;line-height:1.6;padding:6px 12px 10px}
-#c16 table{border-collapse:collapse;font-size:13px;width:100%}
-#c16 th,#c16 td{padding:7px 10px;border-bottom:1px solid #e2e8ec;text-align:left;vertical-align:top}
-#c16 th{width:44%;font-weight:500;color:#5b6d79}
-#c16 ol{margin:0;padding:10px 14px 12px 30px;font-size:13px;line-height:1.65}
-#c16 [hidden]{display:none!important}
-</style>
-<div class="c16-head">
-  <h2 id="c16-title">C16 新案｜5室サイレンサー・吸排気独立</h2>
-  <p class="c16-sub">室内 幅1,000 × 奥行1,000 × 高さ1,600mm（机込み）／外寸 幅1,160 × 奥行1,390 × 高さ1,760mm。上の C07 はそのまま残しています。寸法はすべて仮で、施工用の確定図ではありません。</p>
-</div>
-<div class="c16-modes"><button type="button" id="c16-b3d" class="active">3Dモデル</button><button type="button" id="c16-b2d">2D図面</button></div>
-
-<div id="c16-p3d">
-  <div class="c16-view" id="c16-stage"><canvas id="c16-cv" aria-label="指で回せる C16 の3Dモデル"></canvas><div class="c16-hint">指1本：回転　指2本：拡大・縮小</div></div>
-  <div class="c16-legend"><span><i style="background:var(--blue)"></i>給気（左の口 → 吸1〜吸5 → 部屋の上の穴）</span><span><i style="background:var(--red)"></i>排気（部屋の下の穴 → 排1〜排5 → 左の口・ファン）</span></div>
-  <div class="c16-ctl">
-    <button type="button" id="c16-outside" class="active">外観</button><button type="button" id="c16-inside">中を見る</button><button type="button" id="c16-silencer">消音箱の中</button>
-    <button type="button" id="c16-air">空気の流れ</button><button type="button" id="c16-door">扉：閉</button>
-    <button type="button" id="c16-vfront">正面から</button><button type="button" id="c16-vback">背中側から</button><button type="button" id="c16-vtop">上から</button><button type="button" id="c16-vreset">初期位置</button>
-  </div>
-</div>
-
-<div id="c16-p2d" hidden>
-  <div class="c16-card"><h3>① 上から見た図</h3><div class="c16-draw"><svg id="c16-plan" viewBox="-760 -200 2280 2560" role="img" aria-label="C16 上から見た図"></svg></div>
-    <p class="c16-note">右と上の灰色の線が部屋の壁（角置き）。扉は左、蝶番は手前側で外に開きます。背中側の消音箱は、ブースの横・上・底の壁を後ろへ延ばして一つの箱にしています。</p></div>
-  <div class="c16-card"><h3>② 消音箱の中（ふたを外した図）</h3><div class="c16-draw"><svg id="c16-sil" viewBox="-330 -200 1700 2010" role="img" aria-label="C16 消音箱の中"></svg></div>
-    <p class="c16-note">ブースの中から背中側を見た向き（左＝扉側）。給気・排気とも「通路 → 折り返し室 → 通路 → 折り返し室 → 通路」の5部屋。部屋どうしは壁の口（50）でつながり、給気と排気は真ん中の厚い仕切りで完全に分かれています。</p></div>
-  <div class="c16-card"><h3>③ 横から見た断面</h3><div class="c16-draw"><svg id="c16-sec" viewBox="-200 -200 1850 2220" role="img" aria-label="C16 横から見た断面"></svg></div>
-    <p class="c16-note">左が正面（机側）、右が背中側。後ろの壁の上の穴から新しい空気が入り、下の穴から出ていきます。ふたは二重（板＋空気層＋板）。</p></div>
-</div>
-
-<div class="c16-card"><h3>寸法の一覧（mm・仮）</h3><table id="c16-dims"></table></div>
-<div class="c16-card"><h3>まだ決まっていないこと</h3><ol>
-  <li>折り返し室の幅（今は 200）。</li>
-  <li>点検ぶたは右（部屋の角側）の蝶番。全開には後ろに約1.2mの空きが要ります。</li>
-  <li>給気口と排気口の高さの離れ（今は約30cm）。</li>
-  <li>ファン1台の風量、換気量、遮音の性能は未計算・未検証です。閉め切った使用は換気を確かめてから。</li>
-</ol></div>
-</section>
 <script>
 'use strict';
 const G={"boxes":[{"b":[-562,-550,-62,1262,0,1700],"m":"wood","g":"side","n":"側板・本体"},{"b":[-562,-550,1262,1384,0,850],"m":"wood","g":"wing","n":"吸気室の左右側板 延長122"},{"b":[550,562,-62,1262,0,1700],"m":"wood","g":"side","n":"側板・本体"},{"b":[550,562,1262,1384,0,850],"m":"wood","g":"wing","n":"吸気室の左右側板 延長122"},{"b":[-550,-500,-50,1250,38,1638],"m":"foam","g":"foam","n":"左側面吸音材"},{"b":[500,550,-50,1250,38,1638],"m":"foam","g":"foam","n":"右側面吸音材"},{"b":[-550,550,1250,1262,188,1688],"m":"wood","g":"body","n":"正面固定壁・下端150開口"},{"b":[-500,500,1200,1250,188,1638],"m":"foam","g":"foam","n":"正面内側吸音材"},{"b":[-562,562,-62,1262,1688,1700],"m":"wood","g":"roof","n":"屋根"},{"b":[-500,500,0,1200,1638,1688],"m":"foam","g":"roof_foam","n":"天井吸音材50"},{"b":[-562,562,-62,1384,0,18],"m":"wood","g":"body","n":"底板18"},{"b":[-562,562,1372,1384,0,850],"m":"wood","g":"wing","n":"前外板 高850"},{"b":[-550,550,1262,1312,188,850],"m":"foam","g":"ventfoam","n":"正面壁外面に吸音材50"},{"b":[-550,550,1322,1372,18,850],"m":"foam","g":"ventfoam","n":"前外板内面に吸音材50"},{"b":[-270,270,-184,-172,780,1560],"m":"wood","g":"door","n":"外付け排気板・上開放"},{"b":[-270,-258,-184,-62,780,1560],"m":"wood","g":"door","n":"排気通路左側"},{"b":[258,270,-184,-62,780,1560],"m":"wood","g":"door","n":"排気通路右側"},{"b":[-270,270,-184,-62,780,792],"m":"wood","g":"door","n":"排気底面折返し"},{"b":[-250,250,-172,-122,842,1560],"m":"foam","g":"doorfoam","n":"排気外板内側 吸音50"},{"b":[-250,250,-112,-62,970,1560],"m":"foam","g":"doorfoam","n":"扉外面 吸音50"},{"b":[-250,250,-172,-62,792,842],"m":"foam","g":"doorfoam","n":"排気底面 吸音50"},{"b":[-485,485,885,1200,707,725],"m":"desk","g":"desk","n":"着脱机 970×315"},{"b":[-545,-485,896,914,692,707],"m":"metal","g":"desk","n":"机支持ピン"},{"b":[-545,-485,1156,1174,692,707],"m":"metal","g":"desk","n":"机支持ピン"},{"b":[485,545,896,914,692,707],"m":"metal","g":"desk","n":"机支持ピン"},{"b":[485,545,1156,1174,692,707],"m":"metal","g":"desk","n":"机支持ピン"},{"b":[415,455,-79,-62,830,950],"m":"metal","g":"door","n":"扉取っ手"},{"b":[-549,-530,-72,-50,270,320],"m":"metal","g":"door","n":"蝶番"},{"b":[-549,-530,-72,-50,835,885],"m":"metal","g":"door","n":"蝶番"},{"b":[-549,-530,-72,-50,1410,1460],"m":"metal","g":"door","n":"蝶番"},{"b":[405,500,350,445,38,1588],"m":"person","g":"human","n":"身長1550スケール基準"},{"b":[-550,-250,-62,-50,18,1688],"m":"door","g":"door","n":"背面全面扉 左パネル"},{"b":[250,550,-62,-50,18,1688],"m":"door","g":"door","n":"背面全面扉 右パネル"},{"b":[-250,250,-62,-50,18,850],"m":"door","g":"door","n":"背面全面扉 中央下"},{"b":[-250,250,-62,-50,970,1688],"m":"door","g":"door","n":"背面全面扉 中央上"},{"b":[-500,-250,-50,0,38,1638],"m":"foam","g":"doorfoam","n":"扉内側左吸音材"},{"b":[250,500,-50,0,38,1638],"m":"foam","g":"doorfoam","n":"扉内側右吸音材"},{"b":[-250,250,-50,0,38,850],"m":"foam","g":"doorfoam","n":"扉内側下吸音材"},{"b":[-250,250,-50,0,970,1638],"m":"foam","g":"doorfoam","n":"扉内側上吸音材"},{"b":[-550,550,-62,1384,18,38],"m":"mat","g":"body","n":"床マット全面（吸気通路まで）"}],"arrows":[{"c":"blue","p":[[0,1317,980],[0,1317,450],[0,1317,115],[0,1100,115],[0,850,115]]},{"c":"red","p":[[0,180,900],[0,-116,900],[0,-116,1230],[0,-116,1610]]}],"dimensions":{"usable":"1,000 × 1,200 × 1,600 mm","outside":"幅1,124 × 本体奥行1,324 × 高1,700 mm","vent":"吸排気 50 + 10 + 50 mm","render":"平行投影、床マット吸気まで全面、ピラミッド形状仮ピッチ"}};
@@ -424,7 +434,7 @@ function model(st){
   add('port',[205,70,60],-60,yc-D.port/2,Z(SIL.portOut)-D.port/2,0,yc+D.port/2,Z(SIL.portOut)+D.port/2);
   add('fan',C.fan,-200,yc-75,Z(SIL.portOut)-75,-60,yc+75,Z(SIL.portOut)+75);
   add('lid',C.lid,0,yLid,0,OW,OD,OH);
-  const hide=new Set(st.mode==='inside'?['roof','left','door','front']:st.mode==='silencer'?['roof','lid']:[]);
+  const hide=new Set(st.hide);
   if(st.doorOpen)hide.add('door');
   return B.filter(b=>!hide.has(b.g));
 }
@@ -436,7 +446,7 @@ function flows(){
 }
 const FACES=[[0,1,2,3,[0,0,-1]],[4,5,6,7,[0,0,1]],[0,1,5,4,[0,-1,0]],[3,2,6,7,[0,1,0]],[0,3,7,4,[-1,0,0]],[1,2,6,5,[1,0,0]]];
 const cv=document.getElementById('c16-cv'),stage=document.getElementById('c16-stage'),ctx=cv.getContext('2d');
-const st={yaw:0.6,pitch:0.42,zoom:1,mode:'outside',air:false,doorOpen:false};
+const st={yaw:0.6,pitch:0.42,zoom:1,air:false,doorOpen:false,hide:new Set()};
 let Wc=0,Hc=0,dpr=1;
 function proj(p){
   const cx=p[0]-OW/2,cy=p[1]-OD/2,cz=p[2]-OH/2,cs=Math.cos(st.yaw),sn=Math.sin(st.yaw),cp=Math.cos(st.pitch),sp=Math.sin(st.pitch);
@@ -478,12 +488,10 @@ cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const pre
 const up=e=>{ptrs.delete(e.pointerId);pinch=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 cv.addEventListener('wheel',e=>{e.preventDefault();st.zoom=Math.max(.5,Math.min(4,st.zoom*(e.deltaY<0?1.1:.9)));draw();},{passive:false});
 const $=id=>document.getElementById(id);
-function setMode(m){st.mode=m;for(const [id,k] of [['c16-outside','outside'],['c16-inside','inside'],['c16-silencer','silencer']])$(id).classList.toggle('active',k===m);
-  if(m==='silencer'){st.yaw=Math.PI-0.35;st.pitch=.3;}
-  if(m!=='outside'&&!st.air){st.air=true;$('c16-air').classList.add('active');}draw();}
-$('c16-outside').onclick=()=>setMode('outside');$('c16-inside').onclick=()=>setMode('inside');$('c16-silencer').onclick=()=>setMode('silencer');
+const toggle=(id,g,label)=>{$(id).onclick=()=>{const on=st.hide.has(g);on?st.hide.delete(g):st.hide.add(g);$(id).classList.toggle('active',on);$(id).textContent=label+(on?'：あり':'：なし');draw();};};
+toggle('c16-t-roof','roof','天井');toggle('c16-t-left','left','左の壁');toggle('c16-t-front','front','正面の壁');toggle('c16-t-lid','lid','消音箱のふた');
+$('c16-t-door').onclick=()=>{st.doorOpen=!st.doorOpen;$('c16-t-door').textContent=st.doorOpen?'扉：開':'扉：閉';$('c16-t-door').classList.toggle('active',st.doorOpen);draw();};
 $('c16-air').onclick=()=>{st.air=!st.air;$('c16-air').classList.toggle('active',st.air);draw();};
-$('c16-door').onclick=()=>{st.doorOpen=!st.doorOpen;$('c16-door').textContent=st.doorOpen?'扉：開':'扉：閉';draw();};
 const view=(y,p,z)=>{st.yaw=y;st.pitch=p;if(z)st.zoom=z;draw();};
 $('c16-vfront').onclick=()=>view(0,.15);$('c16-vback').onclick=()=>view(Math.PI,.15);$('c16-vtop').onclick=()=>view(-0.2,1.4);$('c16-vreset').onclick=()=>view(0.6,.42,1);
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(d)requestAnimationFrame(resize);}

@@ -474,8 +474,8 @@ function model(st){
   const mesh=(g,c,tris)=>{B.push({g,c,tris});};
   const Z=y=>OH-W-y,yc=ySil+D.sil/2,P=D.ply,o=P.outer,ia=o+P.air,ib=ia+P.inner,f=D.foam,pb=D.pyr.base,ph=f-pb,pp=D.pyr.pitch,iw=D.in.w,top=OH-W;
   // a lined surface: inner board (part of the wall group) + foam base + pyramids (foam group)
-  const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia));add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
-    mesh([g,'foam'],C.foam,pyramids(M,u0,u1,v0,v1,ib+pb,ph,pp,skip));return fb;};
+  const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia));const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
+    mesh([g,'foam'],C.foam,pyramids(M,u0,u1,v0,v1,ib+pb,ph,pp,skip));fb.board=board;return fb;};
   const skin=(...r)=>{const b=box(...r);b.skin=true;return b;};
   skin('floor',C.woodDark,0,0,0,OW,yLid,W);
   // outer skin (one board all round)
@@ -494,7 +494,7 @@ function model(st){
   // back wall: silencer-side board, the air layer between
   const bw=box('back',C.wood,ia,ySil-o,W,OW-ia,ySil,top);
   for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bf.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2+0,Z(hy),D.hole/2,'y')});
-    bw.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,ySil-o-2,Z(hy),D.hole/2,'y')});}
+    bf.board.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,ySil-ib-2,Z(hy),D.hole/2,'y')});}
   // silencer box: inner boards on the sides/top, flat lining on side faces, pyramids on the back face and on the lid
   box('left',C.wood,ia,ySil-o,W,ib,yLid,top+f);box('right',C.wood,OW-ib,ySil-o,W,OW-ia,yLid,top+f);add(['left','foam'],C.wool,corners(o,ySil-o,W,ia,yLid,OH-o));add(['right','foam'],C.wool,corners(OW-ia,ySil-o,W,OW-o,yLid,OH-o));add(['roof','foam'],C.wool,corners(ia,ySil-o,top+f+P.inner,OW-ia,yLid,OH-o));box('roof',C.wood,ia,ySil-o,top+f,OW-ia,yLid,top+f+P.inner);
   add(['left','foam'],C.foam,corners(ib,ySil,W,W,yLid,top)).only=true;add(['right','foam'],C.foam,corners(OW-W,ySil,W,OW-ib,yLid,top)).only=true;

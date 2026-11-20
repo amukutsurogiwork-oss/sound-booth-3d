@@ -504,9 +504,12 @@ function model(st){
   // the whole cavity between the outer and inner boards is filled (no open tunnels at corners or above the walls)
   const fill=(g,...r)=>{add([g,'foam'],C.wool,corners(...r)).layer=true;};
   fill('left',o,o,W,ia,D.door.from,OH-o);fill('left',o,D.door.from+D.door.w,W,ia,ySil-o,OH-o);fill('left',o,D.door.from,top,ia,D.door.from+D.door.w,OH-o);
-  fill('right',OW-ia,o,W,OW-o,ySil-o,OH-o);fill('front',ia,o,W,OW-ia,ia,OH-o);fill('back',ia,yBack,top,OW-ia,ySil-o,OH-o);
+  fill('right',OW-ia,o,W,OW-o,ySil-o,OH-o);fill('front',ia,o,W,OW-ia,ia,OH-o);// above the back wall the two boards and the absorber between them continue up to the roof (layers stay in order)
+  fill('back',ia,ySil-ia,top,OW-ia,ySil-o,OH-o);box('back',C.wood,W-f,ySil-ib,top,OW-W+f,ySil-ia,OH-ia).layer=true;
+  // the inner boards of the other walls also run up to the roof's inner board
+  box('front',C.wood,ia,ia,top,OW-ia,ib,OH-ia).layer=true;box('left',C.wood,ia,ib,top,ib,yBack+f,OH-ia).layer=true;box('right',C.wood,OW-ib,ib,top,OW-ia,yBack+f,OH-ia).layer=true;
   // back wall: silencer-side board, the air layer between
-  const bw=box('back',C.wood,ia,ySil-o,W,OW-ia,ySil,top);
+  const bw=box('back',C.wood,ia,ySil-o,W,OW-ia,ySil,top+f);
   // silencer box: inner boards on the sides/top, flat lining on side faces, pyramids on the back face and on the lid
   box('left',C.wood,ia,ySil-o,W,ib,yLid,top+f);box('right',C.wood,OW-ib,ySil-o,W,OW-ia,yLid,top+f);add(['left','foam'],C.wool,corners(o,ySil-o,W,ia,yLid,OH-o));add(['right','foam'],C.wool,corners(OW-ia,ySil-o,W,OW-o,yLid,OH-o));add(['roof','foam'],C.wool,corners(ia,ySil-o,top+f+P.inner,OW-ia,yLid,OH-o));box('roof',C.wood,ia,ySil-o,top+f,OW-ia,yLid,top+f+P.inner);
   add(['left','foam'],C.foam,corners(ib,ySil,W,W,yLid,top)).only=true;add(['right','foam'],C.foam,corners(OW-W,ySil,W,OW-ib,yLid,top)).only=true;
@@ -638,6 +641,6 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
-window.C16_TEST={model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
+window.C16_TEST={dims:{yBack,ySil,top:OH-W,OH,mid:OW/2,ia:D.ply.outer+D.ply.air,ib:D.ply.outer+D.ply.air+D.ply.inner,o:D.ply.outer},wool:C.wool,model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
 })();
 </script></body></html>

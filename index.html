@@ -491,6 +491,10 @@ function model(st){
   lining('left',FX(0,1),W,D.door.from,W,top);lining('left',FX(0,1),D.door.from+D.door.w,yBack,W,top);box('left',C.wood,ia,D.door.from,top-0,ib,D.door.from+D.door.w,top+f);
   lining('roof',FZ(OH,-1),W-f,OW-W+f,W-f,yBack+f);
   const bf=lining('back',FY(ySil,-1),W-f,OW-W+f,W,top,near);
+  // the whole cavity between the outer and inner boards is filled (no open tunnels at corners or above the walls)
+  const fill=(g,...r)=>{add([g,'foam'],C.wool,corners(...r)).layer=true;};
+  fill('left',o,o,W,ia,D.door.from,OH-o);fill('left',o,D.door.from+D.door.w,W,ia,ySil-o,OH-o);fill('left',o,D.door.from,top,ia,D.door.from+D.door.w,OH-o);
+  fill('right',OW-ia,o,W,OW-o,ySil-o,OH-o);fill('front',ia,o,W,OW-ia,ia,OH-o);fill('back',ia,yBack,top,OW-ia,ySil-o,OH-o);
   // back wall: silencer-side board, the air layer between
   const bw=box('back',C.wood,ia,ySil-o,W,OW-ia,ySil,top);
   for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bf.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2+0,Z(hy),D.hole/2,'y')});
@@ -500,7 +504,7 @@ function model(st){
   add(['left','foam'],C.foam,corners(ib,ySil,W,W,yLid,top)).only=true;add(['right','foam'],C.foam,corners(OW-W,ySil,W,OW-ib,yLid,top)).only=true;
   add(['roof','foam'],C.foam,corners(W,ySil,top,OW-W,yLid,top+f)).only=true;
   const sf=D.silFoam,partSkip=(cu,cv)=>near(cu,cv)||SIL.parts.some(([x,y,w,h])=>cu>W+x-pp/2&&cu<W+x+w+pp/2&&cv>Z(y+h)-pp/2&&cv<Z(y)+pp/2);
-  const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),W,OW-W,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip));
+  const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),ia,OW-ia,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip));
   for(const [hx,hy] of [SIL.holeIn,SIL.holeOut])sb.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+sf/3+2,Z(hy),D.hole/2,'y')});
   // door (double board + pyramids on the inside), hinged at its front end
   const a=st.doorOpen?70*Math.PI/180:0,DM=hinged(0,D.door.from,a,0,1,1,0);
@@ -512,7 +516,7 @@ function model(st){
   const LM=hinged(OW,OD,st.lidOpen?-105*Math.PI/180:0,-1,0,0,-1),lb=D.lidBoard;
   add('lid',C.lid,slab(LM,0,OW,0,OH,0,lb));add('lid',C.lid,slab(LM,0,OW,0,OH,D.lid-lb,D.lid));
   add(['lid','foam'],C.wool,slab(LM,lb,OW-lb,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,0,lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,OH-lb,OH,lb,D.lid-lb));add('lid',C.lid,slab(LM,OW-lb,OW,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,lb,lb,OH-lb,lb,D.lid-lb));
-  add(['lid','foam'],C.foam,slab(LM,W,OW-W,W,top,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
+  add(['lid','foam'],C.foam,slab(LM,0,OW,0,OH,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
   for(const b of B)if([].concat(b.g).some(g=>g==='door'||g==='lid'))b.outside=true;
   return B.filter(b=>![].concat(b.g).some(g=>st.hide.has(g)));
 }
@@ -540,8 +544,9 @@ function visibleModel(){
   const M=model(st),faces=[];
   for(const b of M){if(!b.v)continue;const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);b.covered=[];
     FACES.forEach((f,fi)=>{const p=f.map(i=>b.v[i]),n=faceNormal(b.v,f,cen),c=p.reduce((a,q)=>[a[0]+q[0]/4,a[1]+q[1]/4,a[2]+q[2]/4],[0,0,0]);faces.push({b,fi,p,n,c,off:dot(n,p[0])});});}
-  const inside=(pt,F)=>{let pos=0,neg=0;for(let k=0;k<4;k++){const a=F.p[k],b2=F.p[(k+1)%4],v=dot(cross(sub(b2,a),sub(pt,a)),F.n);if(v>1e-6)pos++;else if(v<-1e-6)neg++;}return !(pos&&neg);};
-  for(const A of faces)for(const B of faces){if(A.b===B.b||dot(A.n,B.n)>-.999||Math.abs(A.off+B.off)>.6)continue;if(inside(A.c,B)){A.b.covered[A.fi]=true;break;}}
+  const area=F=>Math.hypot(...cross(sub(F.p[1],F.p[0]),sub(F.p[3],F.p[0])));
+  const inside=(pt,F)=>{let pos=0,neg=0;for(let k=0;k<4;k++){const a=F.p[k],b2=F.p[(k+1)%4],e=sub(b2,a),v=dot(cross(e,sub(pt,a)),F.n)/(Math.hypot(...e)||1);if(v>.5)pos++;else if(v<-.5)neg++;}return !(pos&&neg);};
+  for(const A of faces)for(const B of faces){if(A.b===B.b||dot(A.n,B.n)>-.999||Math.abs(A.off+B.off)>.6)continue;if(A.p.every(pt=>inside(pt,B))){A.b.covered[A.fi]=true;break;}}
   // Cut edges of wall layers that face a nearby board (a closed corner pocket) are hidden too.
   const boxes=M.filter(b=>b.v).map(b=>{const xs=b.v.map(q=>q[0]),ys=b.v.map(q=>q[1]),zs=b.v.map(q=>q[2]),lo=[Math.min(...xs),Math.min(...ys),Math.min(...zs)],hi=[Math.max(...xs),Math.max(...ys),Math.max(...zs)];
     const vol=(hi[0]-lo[0])*(hi[1]-lo[1])*(hi[2]-lo[2]),aa=b.v.every(q=>q.every((x,k)=>Math.abs(x-lo[k])<.01||Math.abs(x-hi[k])<.01));return aa&&vol>0?{b,lo,hi}:null;}).filter(Boolean);

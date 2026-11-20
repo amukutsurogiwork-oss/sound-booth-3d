@@ -400,7 +400,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
   for(const [x,y] of [hIn,hOut])el(s,'circle',{cx:x,cy:y,r:D.hole/2,style:'fill:var(--paper);stroke:var(--ink);stroke-width:5'});
   text(s,hIn[0]-40,hIn[1]+95,'部屋の上の穴（入る）',{fs:28,fill:'var(--muted)'});text(s,hOut[0]-40,hOut[1]-70,'部屋の下の穴（出る）',{fs:28,fill:'var(--muted)'});
   const pi=Y(SIL.portIn),pe=Y(SIL.portOut);
-  rect(s,0,pi-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--blue);stroke-width:4');rect(s,0,pe-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--red);stroke-width:4');
+  rect(s,0,pi-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--ink);stroke-width:4');rect(s,0,pe-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--ink);stroke-width:4');
   head(s,'c16ar','var(--red)');head(s,'c16ab','var(--blue)');
   const F=(pts,c,id)=>flow(s,pts.map(([x,y])=>[x<0?x:X(x),Y(y)]),c,id);
   F(SIL.flowIn,'var(--blue)','c16ab');F(SIL.flowOut,'var(--red)','c16ar');
@@ -483,9 +483,8 @@ function model(st){
   skin('front',C.wood,0,0,W,OW,o,OH-o);
   skin('right',C.wood,OW-o,o,W,OW,yLid,OH-o);
   skin('left',C.wood,0,o,W,o,D.door.from,OH-o);const lw=skin('left',C.wood,0,D.door.from+D.door.w,W,o,yLid,OH-o);skin('left',C.wood,0,D.door.from,top,o,D.door.from+D.door.w,OH-o);
-  lw.decals.push({n:[-1,0,0],c:[31,99,198],p:disc(-2,yc,Z(SIL.portIn),D.port/2,'x')},{n:[-1,0,0],c:[211,58,44],p:disc(-2,yc,Z(SIL.portOut),D.port/2,'x')});
   // booth: inner boards + pyramid absorber on every wall and the ceiling
-  const near=(cx,cz)=>[SIL.holeIn,SIL.holeOut].some(([hx,hy])=>Math.hypot(cx-(W+hx),cz-Z(hy))<D.hole*0.9);
+  const near=(cx,cz)=>[SIL.holeIn,SIL.holeOut].some(([hx,hy])=>Math.hypot(cx-(W+hx),cz-Z(hy))<D.hole/2+pp*0.75);
   lining('front',FY(0,1),W-f,OW-W+f,W,top);
   lining('right',FX(OW,-1),W,yBack,W,top);
   lining('left',FX(0,1),W,D.door.from,W,top);lining('left',FX(0,1),D.door.from+D.door.w,yBack,W,top);box('left',C.wood,ia,D.door.from,top-0,ib,D.door.from+D.door.w,top+f);
@@ -497,15 +496,12 @@ function model(st){
   fill('right',OW-ia,o,W,OW-o,ySil-o,OH-o);fill('front',ia,o,W,OW-ia,ia,OH-o);fill('back',ia,yBack,top,OW-ia,ySil-o,OH-o);
   // back wall: silencer-side board, the air layer between
   const bw=box('back',C.wood,ia,ySil-o,W,OW-ia,ySil,top);
-  for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bf.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2+0,Z(hy),D.hole/2,'y')});
-    bf.board.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,ySil-ib-2,Z(hy),D.hole/2,'y')});bw.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+2,Z(hy),D.hole/2,'y')});}
   // silencer box: inner boards on the sides/top, flat lining on side faces, pyramids on the back face and on the lid
   box('left',C.wood,ia,ySil-o,W,ib,yLid,top+f);box('right',C.wood,OW-ib,ySil-o,W,OW-ia,yLid,top+f);add(['left','foam'],C.wool,corners(o,ySil-o,W,ia,yLid,OH-o));add(['right','foam'],C.wool,corners(OW-ia,ySil-o,W,OW-o,yLid,OH-o));add(['roof','foam'],C.wool,corners(ia,ySil-o,top+f+P.inner,OW-ia,yLid,OH-o));box('roof',C.wood,ia,ySil-o,top+f,OW-ia,yLid,top+f+P.inner);
   add(['left','foam'],C.foam,corners(ib,ySil,W,W,yLid,top)).only=true;add(['right','foam'],C.foam,corners(OW-W,ySil,W,OW-ib,yLid,top)).only=true;
   add(['roof','foam'],C.foam,corners(W,ySil,top,OW-W,yLid,top+f)).only=true;
   const sf=D.silFoam,partSkip=(cu,cv)=>near(cu,cv)||SIL.parts.some(([x,y,w,h])=>cu>W+x-pp/2&&cu<W+x+w+pp/2&&cv>Z(y+h)-pp/2&&cv<Z(y)+pp/2);
   const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),ia,OW-ia,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip));
-  for(const [hx,hy] of [SIL.holeIn,SIL.holeOut])sb.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+sf/3+2,Z(hy),D.hole/2,'y')});
   // door (double board + pyramids on the inside), hinged at its front end
   const a=st.doorOpen?70*Math.PI/180:0,DM=hinged(0,D.door.from,a,0,1,1,0);
   add('door',C.door,slab(DM,0,D.door.w,W,top,0,o));add(['door','foam'],C.wool,slab(DM,0,D.door.w,W,top,o,ia));add('door',C.door,slab(DM,0,D.door.w,W,top,ia,ib));
@@ -518,7 +514,10 @@ function model(st){
   add(['lid','foam'],C.wool,slab(LM,lb,OW-lb,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,0,lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,OH-lb,OH,lb,D.lid-lb));add('lid',C.lid,slab(LM,OW-lb,OW,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,lb,lb,OH-lb,lb,D.lid-lb));
   add(['lid','foam'],C.foam,slab(LM,0,OW,0,OH,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
   for(const b of B)if([].concat(b.g).some(g=>g==='door'||g==='lid'))b.outside=true;
-  return B.filter(b=>![].concat(b.g).some(g=>st.hide.has(g)));
+  // Four real openings (no colour): two between the room and the silencer, two from the silencer to the outside.
+  const holes=[...[SIL.holeIn,SIL.holeOut].map(([hx,hy])=>({axis:1,c:[W+hx,0,Z(hy)],r:D.hole/2,a0:yBack,a1:ySil+sf/3})),
+    ...[SIL.portIn,SIL.portOut].map(p=>({axis:0,c:[0,yc,Z(p)],r:D.port/2,a0:0,a1:W}))];
+  const out=B.filter(b=>![].concat(b.g).some(g=>st.hide.has(g)));out.holes=holes;return out;
 }
 function flows(){
   const Z=y=>OH-W-y,yc=ySil+D.sil/2,map=pts=>pts.map(([x,y])=>[x<0?x:W+x,yc,Z(y)]);
@@ -529,7 +528,9 @@ function flows(){
 const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[3,2,6,7],[0,3,7,4],[1,2,6,5]];
 const cv=document.getElementById('c16-cv'),stage=document.getElementById('c16-stage'),ctx=cv.getContext('2d');
 const st={yaw:-0.6,pitch:0.42,zoom:1,air:false,doorOpen:true,lidOpen:true,hide:new Set()};
-let Wc=0,Hc=0,dpr=1,lastOrder=[];
+let Wc=0,Hc=0,dpr=1,lastOrder=[],HOLES=[];
+// points on the rim of an opening, in the plane where its axis coordinate equals a
+function ring(h,a,N=24){const k=[0,1,2].filter(x=>x!==h.axis),pts=[];for(let i=0;i<N;i++){const t=i/N*2*Math.PI,p=h.c.slice();p[h.axis]=a;p[k[0]]+=h.r*Math.cos(t);p[k[1]]+=h.r*Math.sin(t);pts.push(p);}return pts;}
 // World x runs from the seated person's left (door side) to their right, so the view mirrors x.
 function rot(x,y,z){const cs=Math.cos(st.yaw),sn=Math.sin(st.yaw),cp=Math.cos(st.pitch),sp=Math.sin(st.pitch),x1=x*cs-y*sn,y1=x*sn+y*cs;return {x:x1,y:z*cp+y1*sp,d:y1*cp-z*sp};}
 function proj(p){return rot(OW/2-p[0],p[1]-OD/2,p[2]-OH/2);}
@@ -561,7 +562,8 @@ function draw(){
   const polys=[],TILE=220;
   const shade=(c,n,nd)=>{const light=.62+.38*Math.max(0,n[2]*.8+(-nd)*.35-n[0]*.2);return c.map(x=>Math.min(255,Math.round(x*light)));};
   const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
-  for(const b of visibleModel()){
+  const VM=visibleModel();HOLES=VM.holes||[];
+  for(const b of VM){
     if(b.tris){for(const t of b.tris){const nd=viewDepthOfNormal(t.n);if(nd>=0)continue;const pts=t.p.map(proj);polys.push({g:b.g,d:(pts[0].d+pts[1].d+pts[2].d)/3-1,pts,col:shade(b.c,t.n,nd),thin:true});}continue;}
     const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);
     const thinAxis=b.only?(()=>{const e=[sub(b.v[1],b.v[0]),sub(b.v[3],b.v[0]),sub(b.v[4],b.v[0])].map(x=>Math.hypot(...x));const k=e.indexOf(Math.min(...e));return sub([b.v[1],b.v[3],b.v[4]][k],b.v[0]).map(x=>x/e[k]);})():null;
@@ -574,15 +576,26 @@ function draw(){
       const T=hull?120:TILE,bias=hull?60:0;
       const col=shade(b.c,n,nd),nu=Math.max(1,Math.ceil(Math.hypot(...sub(q[1],q[0]))/T)),nv=Math.max(1,Math.ceil(Math.hypot(...sub(q[3],q[0]))/T));
       const at=(u,v)=>lerp(lerp(q[0],q[1],u),lerp(q[3],q[2],u),v);
-      for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const pts=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)].map(proj);
-        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4-bias,pts,col,tile:nu*nv>1});}
-      for(const dc of b.decals)if(dot(dc.n,n)>.99){const pts=dc.p.map(proj);polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/pts.length-75-bias,pts,col:dc.c,flat:true});}
+      // openings that pass through this face's plane
+      const cuts=HOLES.filter(h=>Math.abs(n[h.axis])>.99&&fc[h.axis]>=h.a0-1&&fc[h.axis]<=h.a1+1);
+      for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const w=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)],pts=w.map(proj);
+        const hs=cuts.filter(h=>{const k=[0,1,2].filter(a=>a!==h.axis);return k.every(a=>Math.min(...w.map(p=>p[a]))<h.c[a]+h.r&&Math.max(...w.map(p=>p[a]))>h.c[a]-h.r);});
+        const cut=hs.length?hs.map(h=>ring(h,fc[h.axis]).map(proj)):null;
+        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4-bias,pts,col,tile:nu*nv>1,cut});}
     }
   }
+  // the inside of each opening: a short tube, so the wall layers are not seen through it
+  for(const h of HOLES){const N=20;for(let k=0;k<N;k++){const a=ring(h,h.a0,N),bq=ring(h,h.a1,N),k2=(k+1)%N,quad=[a[k],a[k2],bq[k2],bq[k]];
+    const mid=quad.reduce((s,p)=>[s[0]+p[0]/4,s[1]+p[1]/4,s[2]+p[2]/4],[0,0,0]),rad=sub(mid,h.c).map((x,i)=>i===h.axis?0:x),L=Math.hypot(...rad),nin=rad.map(x=>-x/L);
+    const nd=viewDepthOfNormal(nin);if(nd>=0)continue;const pts=quad.map(proj);polys.push({g:'hole',d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col:shade([150,118,84],nin,nd),thin:true});}}
   polys.sort((p,q)=>q.d-p.d);
   lastOrder=polys.map(p=>{const xy=p.pts.map(S2);return {g:p.g,d:p.d,box:[Math.min(...xy.map(a=>a[0])),Math.min(...xy.map(a=>a[1])),Math.max(...xy.map(a=>a[0])),Math.max(...xy.map(a=>a[1]))]};});
   ctx.lineJoin='round';
-  for(const p of polys){ctx.beginPath();p.pts.forEach((pt,i)=>{const [x,y]=S2(pt);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();
+  const path=pp=>{pp.forEach((pt,i)=>{const [x,y]=S2(pt);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();};
+  for(const p of polys){
+    if(p.cut){ctx.save();ctx.beginPath();path(p.pts);ctx.clip();ctx.beginPath();path(p.pts);for(const c of p.cut)path(c);ctx.fillStyle=`rgb(${p.col})`;ctx.fill('evenodd');ctx.restore();
+      ctx.beginPath();path(p.pts);ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();continue;}
+    ctx.beginPath();path(p.pts);
     ctx.fillStyle=`rgb(${p.col})`;ctx.fill();if(p.tile){ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();}else if(!p.flat){ctx.strokeStyle=p.thin?'rgba(40,70,80,.25)':'rgba(40,50,60,.35)';ctx.lineWidth=p.thin?.6:1;ctx.stroke();}}
   if(st.air)for(const f of flows()){
     const pts=f.p.map(p=>S2(proj(p)));ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
@@ -614,6 +627,6 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
-window.C16_TEST={model:()=>model(st),view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
+window.C16_TEST={model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
 })();
 </script></body></html>

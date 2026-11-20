@@ -469,15 +469,17 @@ function pyramids(M,u0,u1,v0,v1,w0,h,pitch,skip){const tris=[],nu=Math.max(1,Mat
   for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const a=u0+i*du,b=v0+j*dv,cu=a+du/2,cv=b+dv/2;if(skip&&skip(cu,cv))continue;
     const q=[M(a,b,w0),M(a+du,b,w0),M(a+du,b+dv,w0),M(a,b+dv,w0)],tip=M(cu,cv,w0+h),bc=M(cu,cv,w0);
     for(let k=0;k<4;k++){const t=[q[k],q[(k+1)%4],tip];let n=cross(sub(t[1],t[0]),sub(t[2],t[0]));const fc=[(t[0][0]+t[1][0]+t[2][0])/3,(t[0][1]+t[1][1]+t[2][1])/3,(t[0][2]+t[1][2]+t[2][2])/3];
-      if(dot(n,sub(fc,bc))<0)n=n.map(x=>-x);const L=Math.hypot(...n);tris.push({p:t,n:n.map(x=>x/L)});}}
-  return tris;}
+      if(dot(n,sub(fc,bc))<0)n=n.map(x=>-x);const L=Math.hypot(...n);tris.push({p:t,n:n.map(x=>x/L)});}
+    const up=sub(tip,bc),UL=Math.hypot(...up),down=up.map(x=>-x/UL);tris.push({p:[q[0],q[2],q[1]],n:down,bottom:true},{p:[q[0],q[3],q[2]],n:down,bottom:true});}
+  tris.h=h;return tris;}
 function model(st){
   const B=[],add=(g,c,v)=>{const o={g,c,v,decals:[]};B.push(o);return o;},box=(g,c,...r)=>add(g,c,corners(...r));
-  const mesh=(g,c,tris)=>{B.push({g,c,tris});};
+  // pyramids are solid (4 sides + bottom) and sorted a pyramid-height nearer than their base, so the base never paints over them
+  const mesh=(g,c,tris,base)=>{B.push({g,c,tris,base,lift:1});if(base)base.carries=tris.h||30;};
   const Z=y=>OH-W-y,yc=ySil+D.sil/2,P=D.ply,o=P.outer,ia=o+P.air,ib=ia+P.inner,f=D.foam,pb=D.pyr.base,ph=f-pb,pp=D.pyr.pitch,iw=D.in.w,top=OH-W;
   // a lined surface: inner board (part of the wall group) + foam base + pyramids (foam group)
-  const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia)).layer=true;const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));board.layer=true;const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
-    mesh([g,'foam'],C.foam,pyramids(M,u0,u1,v0,v1,ib+pb,ph,pp,skip));fb.board=board;return fb;};
+  const lining=(g,M,u0,u1,v0,v1,skip,pr=[u0,u1,v0,v1])=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia)).layer=true;const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));board.layer=true;const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
+    mesh([g,'foam'],C.foam,pyramids(M,pr[0],pr[1],pr[2],pr[3],ib+pb,ph,pp,skip),fb);fb.board=board;return fb;};
   const skin=(...r)=>{const b=box(...r);b.skin=true;return b;};
   // floor, also double: outer board + absorber + inner board, then an anti-vibration mat in the booth (flat absorber in the silencer)
   skin('floor',C.woodDark,0,0,0,OW,yLid,o);
@@ -496,11 +498,11 @@ function model(st){
   skin('left',C.wood,0,o,W,o,D.door.from,OH-o);const lw=skin('left',C.wood,0,D.door.from+D.door.w,W,o,yLid,OH-o);skin('left',C.wood,0,D.door.from,top,o,D.door.from+D.door.w,OH-o);
   // booth: inner boards + pyramid absorber on every wall and the ceiling
   const near=(cx,cz)=>[SIL.holeIn,SIL.holeOut].some(([hx,hy])=>Math.hypot(cx-(W+hx),cz-Z(hy))<D.hole/2+pp*0.75);
-  lining('front',FY(0,1),W-f,OW-W+f,W,top);
+  lining('front',FY(0,1),W-f,OW-W+f,W,top,null,[W,OW-W,W,top]);
   lining('right',FX(OW,-1),W,yBack,W,top);
   lining('left',FX(0,1),W,D.door.from,W,top);lining('left',FX(0,1),D.door.from+D.door.w,yBack,W,top);box('left',C.wood,ia,D.door.from,top-0,ib,D.door.from+D.door.w,top+f);
-  lining('roof',FZ(OH,-1),W-f,OW-W+f,W-f,yBack+f);
-  const bf=lining('back',FY(ySil,-1),W-f,OW-W+f,W,top,near);
+  lining('roof',FZ(OH,-1),W-f,OW-W+f,W-f,yBack+f,null,[W,OW-W,W,yBack]);
+  const bf=lining('back',FY(ySil,-1),W-f,OW-W+f,W,top,near,[W,OW-W,W,top]);
   // the whole cavity between the outer and inner boards is filled (no open tunnels at corners or above the walls)
   const fill=(g,...r)=>{add([g,'foam'],C.wool,corners(...r)).layer=true;};
   fill('left',o,o,W,ia,D.door.from,OH-o);fill('left',o,D.door.from+D.door.w,W,ia,ySil-o,OH-o);fill('left',o,D.door.from,top,ia,D.door.from+D.door.w,OH-o);
@@ -515,18 +517,18 @@ function model(st){
   add(['left','foam'],C.foam,corners(ib,ySil,W,W,yLid,top)).only=true;add(['right','foam'],C.foam,corners(OW-W,ySil,W,OW-ib,yLid,top)).only=true;
   add(['roof','foam'],C.foam,corners(W,ySil,top,OW-W,yLid,top+f)).only=true;
   const sf=D.silFoam,partSkip=(cu,cv)=>near(cu,cv)||SIL.parts.some(([x,y,w,h])=>cu>W+x-pp/2&&cu<W+x+w+pp/2&&cv>Z(y+h)-pp/2&&cv<Z(y)+pp/2);
-  const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),ia,OW-ia,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip));
+  const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),ia,OW-ia,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip),sb);
   // door (double board + pyramids on the inside), hinged at its front end
   const a=st.doorOpen?70*Math.PI/180:0,DM=hinged(0,D.door.from,a,0,1,1,0);
   add('door',C.door,slab(DM,0,D.door.w,W,top,0,o));add(['door','foam'],C.wool,slab(DM,0,D.door.w,W,top,o,ia));add('door',C.door,slab(DM,0,D.door.w,W,top,ia,ib));
-  add(['door','foam'],C.foam,slab(DM,0,D.door.w,W,top,ib,ib+pb)).only=true;mesh(['door','foam'],C.foam,pyramids(DM,0,D.door.w,W,top,ib+pb,ph,pp));
+  {const db=add(['door','foam'],C.foam,slab(DM,0,D.door.w,W,top,ib,ib+pb));db.only=true;mesh(['door','foam'],C.foam,pyramids(DM,0,D.door.w,W,top,ib+pb,ph,pp),db);}
   box('desk',C.desk,W,W,W+D.desk.h-30,W+D.in.w,W+D.desk.d,W+D.desk.h); // supported by the side walls; legroom stays open
   for(const [x,y,w,h] of SIL.parts)box('sil',C.part,W+x,ySil+sf/3,Z(y+h),W+x+w,yLid-sf/3,Z(y));
   // lid: two boards with an air layer, pyramids on its inner face; hinged at the back right corner
   const LM=hinged(OW,OD,st.lidOpen?-105*Math.PI/180:0,-1,0,0,-1),lb=D.lidBoard;
   add('lid',C.lid,slab(LM,0,OW,0,OH,0,lb));add('lid',C.lid,slab(LM,0,OW,0,OH,D.lid-lb,D.lid));
   add(['lid','foam'],C.wool,slab(LM,lb,OW-lb,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,0,lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,OH-lb,OH,lb,D.lid-lb));add('lid',C.lid,slab(LM,OW-lb,OW,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,lb,lb,OH-lb,lb,D.lid-lb));
-  add(['lid','foam'],C.foam,slab(LM,0,OW,0,OH,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
+  {const lb2=add(['lid','foam'],C.foam,slab(LM,0,OW,0,OH,D.lid,D.lid+sf/3));lb2.only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)),lb2);}
   for(const b of B)if([].concat(b.g).some(g=>g==='door'||g==='lid'))b.outside=true;
   // Four real openings (no colour): two between the room and the silencer, two from the silencer to the outside.
   const holes=[...[SIL.holeIn,SIL.holeOut].map(([hx,hy])=>({wall:'back',axis:1,c:[W+hx,0,Z(hy)],r:D.hole/2,a0:yBack,a1:ySil+sf/3})),
@@ -542,7 +544,7 @@ function flows(){
 const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[3,2,6,7],[0,3,7,4],[1,2,6,5]];
 const cv=document.getElementById('c16-cv'),stage=document.getElementById('c16-stage'),ctx=cv.getContext('2d');
 const st={yaw:-0.6,pitch:0.42,zoom:1,air:false,doorOpen:true,lidOpen:true,hide:new Set()};
-let Wc=0,Hc=0,dpr=1,lastOrder=[],HOLES=[];
+let Wc=0,Hc=0,dpr=1,lastPrims=[],HOLES=[];
 // points on the rim of an opening, in the plane where its axis coordinate equals a
 function ring(h,a,N=24){const k=[0,1,2].filter(x=>x!==h.axis),pts=[];for(let i=0;i<N;i++){const t=i/N*2*Math.PI,p=h.c.slice();p[h.axis]=a;p[k[0]]+=h.r*Math.cos(t);p[k[1]]+=h.r*Math.sin(t);pts.push(p);}return pts;}
 // World x runs from the seated person's left (door side) to their right, so the view mirrors x.
@@ -570,47 +572,51 @@ function visibleModel(){
   vmKey=key;vmCache=M;return M;
 }
 function draw(){
-  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,Wc,Hc);ctx.fillStyle='#f8fbfd';ctx.fillRect(0,0,Wc,Hc);
+  // Every surface is rasterised into a depth buffer: at each pixel only the nearest surface is kept,
+  // so nothing can show through a wall and nothing disappears, whatever the angle.
+  const R=(ptrs.size?1:dpr),Wp=Math.max(1,Math.round(Wc*R)),Hp=Math.max(1,Math.round(Hc*R));
   const scale=Math.min(Wc,Hc)/2400*st.zoom,ox=Wc/2,oy=Hc/2+10,S2=pt=>[ox+pt.x*scale,oy-pt.y*scale];
-  // One depth-sorted list. Big faces are cut into small tiles so that sorting by tile centre keeps near and far parts in order.
-  const polys=[],TILE=220;
   const shade=(c,n,nd)=>{const light=.62+.38*Math.max(0,n[2]*.8+(-nd)*.35-n[0]*.2);return c.map(x=>Math.min(255,Math.round(x*light)));};
-  const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+  const prims=[];// {pts:[[x,y,z]x3], col, g, cut}
+  const P=pt=>{const q=proj(pt),s=S2(q);return [s[0]*R,s[1]*R,q.d];};
+  const tri=(a,b,c,col,g,cut)=>prims.push({pts:[a,b,c],col,g,cut});
   const VM=visibleModel();HOLES=VM.holes||[];
   for(const b of VM){
-    if(b.tris){for(const t of b.tris){const nd=viewDepthOfNormal(t.n);if(nd>=0)continue;const pts=t.p.map(proj);polys.push({g:b.g,d:(pts[0].d+pts[1].d+pts[2].d)/3-1,pts,col:shade(b.c,t.n,nd),thin:true});}continue;}
+    if(b.tris){for(const t of b.tris){const nd=viewDepthOfNormal(t.n);if(nd>=0)continue;const p=t.p.map(P);tri(p[0],p[1],p[2],shade(b.c,t.n,nd),b.g);}continue;}
     const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);
     const thinAxis=b.only?(()=>{const e=[sub(b.v[1],b.v[0]),sub(b.v[3],b.v[0]),sub(b.v[4],b.v[0])].map(x=>Math.hypot(...x));const k=e.indexOf(Math.min(...e));return sub([b.v[1],b.v[3],b.v[4]][k],b.v[0]).map(x=>x/e[k]);})():null;
     for(const [fi,f] of FACES.entries()){
       if(b.covered&&b.covered[fi])continue;
       const n=faceNormal(b.v,f,cen),nd=viewDepthOfNormal(n);if(nd>=0||(thinAxis&&Math.abs(dot(n,thinAxis))<.99))continue;
-      // Faces on the outside of the closed box are always in front of what is inside it: small tiles, and a little nearer.
-      const q=f.map(i=>b.v[i]),fc=q.reduce((a,p)=>[a[0]+p[0]/4,a[1]+p[1]/4,a[2]+p[2]/4],[0,0,0]);
-      const hull=(fc[0]<1&&n[0]<-.9)||(fc[0]>OW-1&&n[0]>.9)||(fc[1]<1&&n[1]<-.9)||((fc[1]>OD-1||Math.abs(fc[1]-yLid)<1)&&n[1]>.9)||(fc[2]<1&&n[2]<-.9)||(fc[2]>OH-1&&n[2]>.9);
-      const T=hull?120:TILE,bias=hull?60:0;
-      const col=shade(b.c,n,nd),nu=Math.max(1,Math.ceil(Math.hypot(...sub(q[1],q[0]))/T)),nv=Math.max(1,Math.ceil(Math.hypot(...sub(q[3],q[0]))/T));
-      const at=(u,v)=>lerp(lerp(q[0],q[1],u),lerp(q[3],q[2],u),v);
-      // openings that pass through this face's plane
-      const cuts=HOLES.filter(h=>Math.abs(n[h.axis])>.99&&fc[h.axis]>=h.a0-1&&fc[h.axis]<=h.a1+1);
-      for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const w=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)],pts=w.map(proj);
-        const hs=cuts.filter(h=>{const k=[0,1,2].filter(a=>a!==h.axis);return k.every(a=>Math.min(...w.map(p=>p[a]))<h.c[a]+h.r&&Math.max(...w.map(p=>p[a]))>h.c[a]-h.r);});
-        const cut=hs.length?hs.map(h=>ring(h,fc[h.axis]).map(proj)):null;
-        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4-bias,pts,col,tile:nu*nv>1,cut});}
+      const q=f.map(i=>b.v[i]),fc=q.reduce((a,p)=>[a[0]+p[0]/4,a[1]+p[1]/4,a[2]+p[2]/4],[0,0,0]),col=shade(b.c,n,nd),p=q.map(P);
+      // openings that pass through this face: pixels inside the circle are left out
+      const hs=HOLES.filter(h=>Math.abs(n[h.axis])>.99&&fc[h.axis]>=h.a0-1&&fc[h.axis]<=h.a1+1&&[0,1,2].filter(a=>a!==h.axis).every(a=>Math.min(...q.map(v=>v[a]))<h.c[a]+h.r&&Math.max(...q.map(v=>v[a]))>h.c[a]-h.r));
+      let cut=null;
+      if(hs.length){const e1=[p[1][0]-p[0][0],p[1][1]-p[0][1]],e2=[p[3][0]-p[0][0],p[3][1]-p[0][1]],det=e1[0]*e2[1]-e1[1]*e2[0];
+        if(Math.abs(det)>1e-9)cut={x0:p[0][0],y0:p[0][1],i11:e2[1]/det,i12:-e2[0]/det,i21:-e1[1]/det,i22:e1[0]/det,P0:q[0],A:sub(q[1],q[0]),B:sub(q[3],q[0]),hs};}
+      tri(p[0],p[1],p[2],col,b.g,cut);tri(p[0],p[2],p[3],col,b.g,cut);
     }
   }
-  // the inside of each opening: a short tube, so the wall layers are not seen through it
-  for(const h of HOLES){const N=20;for(let k=0;k<N;k++){const a=ring(h,h.a0,N),bq=ring(h,h.a1,N),k2=(k+1)%N,quad=[a[k],a[k2],bq[k2],bq[k]];
+  // the inside of each opening: a short tube
+  for(const h of HOLES){const N=20,a=ring(h,h.a0,N),bq=ring(h,h.a1,N);for(let k=0;k<N;k++){const k2=(k+1)%N,quad=[a[k],a[k2],bq[k2],bq[k]];
     const mid=quad.reduce((s,p)=>[s[0]+p[0]/4,s[1]+p[1]/4,s[2]+p[2]/4],[0,0,0]),rad=sub(mid,h.c).map((x,i)=>i===h.axis?0:x),L=Math.hypot(...rad),nin=rad.map(x=>-x/L);
-    const nd=viewDepthOfNormal(nin);if(nd>=0)continue;const pts=quad.map(proj);polys.push({g:['hole',h.wall],d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col:shade([150,118,84],nin,nd),thin:true});}}
-  polys.sort((p,q)=>q.d-p.d);
-  lastOrder=polys.map(p=>{const xy=p.pts.map(S2);return {g:p.g,d:p.d,box:[Math.min(...xy.map(a=>a[0])),Math.min(...xy.map(a=>a[1])),Math.max(...xy.map(a=>a[0])),Math.max(...xy.map(a=>a[1]))]};});
-  ctx.lineJoin='round';
-  const path=pp=>{pp.forEach((pt,i)=>{const [x,y]=S2(pt);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();};
-  for(const p of polys){
-    if(p.cut){ctx.save();ctx.beginPath();path(p.pts);ctx.clip();ctx.beginPath();path(p.pts);for(const c of p.cut)path(c);ctx.fillStyle=`rgb(${p.col})`;ctx.fill('evenodd');ctx.restore();
-      ctx.beginPath();path(p.pts);ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();continue;}
-    ctx.beginPath();path(p.pts);
-    ctx.fillStyle=`rgb(${p.col})`;ctx.fill();if(p.tile){ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();}else if(!p.flat){ctx.strokeStyle=p.thin?'rgba(40,70,80,.25)':'rgba(40,50,60,.35)';ctx.lineWidth=p.thin?.6:1;ctx.stroke();}}
+    const nd=viewDepthOfNormal(nin);if(nd>=0)continue;const p=quad.map(P),col=shade([150,118,84],nin,nd);tri(p[0],p[1],p[2],col,['hole',h.wall]);tri(p[0],p[2],p[3],col,['hole',h.wall]);}}
+  // rasterise
+  const img=new ImageData(Wp,Hp),buf=new Uint32Array(img.data.buffer),zb=new Float32Array(Wp*Hp).fill(Infinity);
+  buf.fill((255<<24)|(0xfd<<16)|(0xfb<<8)|0xf8);
+  for(const t of prims){const [a,b,c]=t.pts;const area=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);if(Math.abs(area)<1e-9)continue;
+    const x0=Math.max(0,Math.floor(Math.min(a[0],b[0],c[0]))),x1=Math.min(Wp-1,Math.ceil(Math.max(a[0],b[0],c[0]))),y0=Math.max(0,Math.floor(Math.min(a[1],b[1],c[1]))),y1=Math.min(Hp-1,Math.ceil(Math.max(a[1],b[1],c[1])));
+    const color=(255<<24)|(t.col[2]<<16)|(t.col[1]<<8)|t.col[0],inv=1/area,ct=t.cut;
+    for(let y=y0;y<=y1;y++){const py=y+.5;for(let x=x0;x<=x1;x++){const px=x+.5;
+      const w0=((b[0]-px)*(c[1]-py)-(b[1]-py)*(c[0]-px))*inv,w1=((c[0]-px)*(a[1]-py)-(c[1]-py)*(a[0]-px))*inv,w2=1-w0-w1;
+      if(w0<-1e-6||w1<-1e-6||w2<-1e-6)continue;const z=w0*a[2]+w1*b[2]+w2*c[2],i=y*Wp+x;if(z>=zb[i])continue;
+      if(ct){const dx=px-ct.x0,dy=py-ct.y0,u=ct.i11*dx+ct.i12*dy,v=ct.i21*dx+ct.i22*dy,wp=[ct.P0[0]+u*ct.A[0]+v*ct.B[0],ct.P0[1]+u*ct.A[1]+v*ct.B[1],ct.P0[2]+u*ct.A[2]+v*ct.B[2]];
+        if(ct.hs.some(h=>{const k=[0,1,2].filter(q=>q!==h.axis);return Math.hypot(wp[k[0]]-h.c[k[0]],wp[k[1]]-h.c[k[1]])<h.r;}))continue;}
+      zb[i]=z;buf[i]=color;}}}
+  if(!draw.off)draw.off=document.createElement('canvas');const off=draw.off;off.width=Wp;off.height=Hp;off.getContext('2d').putImageData(img,0,0);
+  ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=true;ctx.clearRect(0,0,cv.width,cv.height);ctx.drawImage(off,0,0,cv.width,cv.height);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  lastPrims=prims.map(t=>({g:t.g,d:(t.pts[0][2]+t.pts[1][2]+t.pts[2][2])/3,cut:!!t.cut,col:t.col,pts:t.pts.map(p=>[p[0]/R,p[1]/R,p[2]]),box:[Math.min(...t.pts.map(p=>p[0]))/R,Math.min(...t.pts.map(p=>p[1]))/R,Math.max(...t.pts.map(p=>p[0]))/R,Math.max(...t.pts.map(p=>p[1]))/R]}));
   if(st.air)for(const f of flows()){
     const pts=f.p.map(p=>S2(proj(p)));ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
     ctx.strokeStyle=f.c;ctx.lineWidth=Math.max(2.5,5*st.zoom*Math.min(Wc,Hc)/700);ctx.globalAlpha=.9;ctx.stroke();ctx.globalAlpha=1;
@@ -625,7 +631,7 @@ cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const pre
   if(ptrs.size===1){st.yaw+=(e.clientX-prev[0])*.01;st.pitch=Math.max(-.2,Math.min(1.45,st.pitch+(e.clientY-prev[1])*.01));}
   else if(ptrs.size===2){const [a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch)st.zoom=Math.max(.5,Math.min(4,st.zoom*d/pinch));pinch=d;}
   draw();});
-const up=e=>{ptrs.delete(e.pointerId);pinch=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+const up=e=>{ptrs.delete(e.pointerId);pinch=0;if(!ptrs.size)draw();};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 cv.addEventListener('wheel',e=>{e.preventDefault();st.zoom=Math.max(.5,Math.min(4,st.zoom*(e.deltaY<0?1.1:.9)));draw();},{passive:false});
 const $=id=>document.getElementById(id);
 const toggle=(id,g,label)=>{$(id).onclick=()=>{const on=st.hide.has(g);on?st.hide.delete(g):st.hide.add(g);$(id).classList.toggle('active',on);$(id).textContent=label+(on?'：あり':'：なし');draw();};};
@@ -641,6 +647,6 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
-window.C16_TEST={dims:{yBack,ySil,top:OH-W,OH,mid:OW/2,ia:D.ply.outer+D.ply.air,ib:D.ply.outer+D.ply.air+D.ply.inner,o:D.ply.outer},wool:C.wool,model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
+window.C16_TEST={dims:{yBack,ySil,top:OH-W,OH,mid:OW/2,ia:D.ply.outer+D.ply.air,ib:D.ply.outer+D.ply.air+D.ply.inner,o:D.ply.outer},wool:C.wool,model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastPrims;}};
 })();
 </script></body></html>

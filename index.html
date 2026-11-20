@@ -33,7 +33,7 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
 </style></head><body>
 <section id="c16" aria-labelledby="c16-title">
 <style>
-#c16{--paper:#ffffff;--ink:#1d2733;--muted:#5d6b7a;--rule:#c9d2db;--wall:#dfe5ec;--wall-line:#3a4756;--red:#d33a2c;--blue:#1f63c6;--fan:#7a4fc0;--foam:#8fb6c2;--board:#9a7b55;--wool:#d3eaf1;--room:#9aa7b4;
+#c16{--paper:#ffffff;--ink:#1d2733;--muted:#5d6b7a;--rule:#c9d2db;--wall:#dfe5ec;--wall-line:#3a4756;--red:#d33a2c;--blue:#1f63c6;--fan:#7a4fc0;--foam:#8fb6c2;--board:#9a7b55;--wool:#d3eaf1;--mat:#6f6a64;--rubber:#3b3d42;--heavy:#4a4a52;--room:#9aa7b4;
   margin:0;background:#f4f7f9;padding:0 0 8px}
 #c16 .c16-old{background:#176e9f;color:#fff;font-size:14px;font-weight:700;padding:12px 14px;margin:16px 0 0}
 #c16 .c16-head{background:#fff;padding:14px;border-bottom:1px solid #d9e1e6}
@@ -64,7 +64,7 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
 </style>
 <div class="c16-head">
   <h2 id="c16-title">C16（最新）｜5室サイレンサー・吸排気独立</h2>
-  <p class="c16-sub">室内 幅1,000 × 奥行1,000 × 高さ1,600mm（机込み）／外寸 幅1,260 × 奥行1,490 × 高さ1,860mm（壁130＝外の板12＋空気層44＋内の板24＋ピラミッド吸音材50）。上の C07 はそのまま残しています。寸法はすべて仮で、施工用の確定図ではありません。</p>
+  <p class="c16-sub">室内 幅1,000 × 奥行1,000 × 高さ1,600mm（机込み）／外寸 幅1,260 × 奥行1,490 × 高さ1,860mm＋防振ゴムの足30（壁・天井・床は二重構造＋吸音材）。上の C07 はそのまま残しています。寸法はすべて仮で、施工用の確定図ではありません。</p>
 </div>
 <div class="c16-modes"><button type="button" id="c16-b3d" class="active">3Dモデル</button><button type="button" id="c16-b2d">2D図面</button></div>
 
@@ -94,6 +94,7 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
   <li>扉は左側、手前の蝶番で外開き。背中側は全面の点検ぶた（二重）。</li>
   <li>室内は 幅1,000 × 奥行1,000 × 高さ1,600（C07 は奥行1,200）。</li>
   <li>壁・天井・扉・点検ぶたは二重構造（板＋空気層＋板）。いちばん内側はピラミッド吸音材。消音箱の中も吸音材で覆う。</li>
+  <li>下の階への揺れ対策：ブースを防振ゴムの足で床から浮かせ、床に重い遮音マットと防振マットを入れる。</li>
 </ol></div>
 <div class="c16-card"><h3>寸法の一覧（mm・仮）</h3><table id="c16-dims"></table></div>
 <div class="c16-card"><h3>まだ決まっていないこと</h3><ol>
@@ -304,7 +305,7 @@ updateButtons();resize();
 (function(){
 'use strict';
 // C16: one set of dimensions (mm) drives the 3D model, the 2D drawings and the table.
-const D={in:{w:1000,d:1000,h:1600},wall:130,foam:50,ply:{outer:12,air:44,inner:24},pyr:{base:15,pitch:125},silFoam:30,lidBoard:18,sil:150,lid:80,desk:{d:350,h:720},door:{from:450,w:600},
+const D={in:{w:1000,d:1000,h:1600},wall:130,foam:50,ply:{outer:12,air:44,inner:24},pyr:{base:15,pitch:125},silFoam:30,lidBoard:18,feet:{h:30,size:100,n:3},heavy:10,sil:150,lid:80,desk:{d:350,h:720},door:{from:450,w:600},
   part:18,mid:36,gap:50,turn:200,hole:100,port:100,roomGap:60};
 const W=D.wall,OW=D.in.w+2*W,OH=D.in.h+2*W,OD=W+D.in.d+W+D.sil+D.lid;
 const yBack=W+D.in.d,ySil=yBack+W,yLid=ySil+D.sil;
@@ -370,6 +371,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
    zig(s,W,ySil,W+iw,ySil,sf,0,1);zig(s,W,yLid,W+iw,yLid,sf,0,-1);
    text(s,W+iw-170,yBack-W/2-40,'ピラミッド吸音材 50',{fs:26,fill:'var(--muted)'});}
   rect(s,0,yLid,OW,D.lid,'fill:var(--wool);stroke:var(--board);stroke-width:5');band(s,0,yLid,OW,D.lidBoard);band(s,0,yLid+D.lid-D.lidBoard,OW,D.lidBoard);
+  {const F=D.feet;for(let i=0;i<F.n;i++)for(let j=0;j<F.n;j++){const x=D.ply.outer+(OW-2*D.ply.outer-F.size)*i/(F.n-1),y=D.ply.outer+(yLid-2*D.ply.outer-F.size)*j/(F.n-1);rect(s,x,y,F.size,F.size,'fill:none;stroke:var(--rubber);stroke-width:3;stroke-dasharray:10 8');}}
   rect(s,W,W,iw,D.desk.d,'fill:none;stroke:var(--ink);stroke-width:3');text(s,W+iw/2,W+D.desk.d/2+14,'机（奥行350・高さ720）',{fs:38});
   el(s,'circle',{cx:W+iw/2,cy:W+D.desk.d+330,r:190,style:S.ink});text(s,W+iw/2,W+D.desk.d+344,'座る人',{fs:38});
   const hy=D.door.from,a=70*Math.PI/180,ex=-D.door.w*Math.sin(a),ey=hy+D.door.w*Math.cos(a);
@@ -400,7 +402,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
   for(const [x,y] of [hIn,hOut])el(s,'circle',{cx:x,cy:y,r:D.hole/2,style:'fill:var(--paper);stroke:var(--ink);stroke-width:5'});
   text(s,hIn[0]-40,hIn[1]+95,'部屋の上の穴（入る）',{fs:28,fill:'var(--muted)'});text(s,hOut[0]-40,hOut[1]-70,'部屋の下の穴（出る）',{fs:28,fill:'var(--muted)'});
   const pi=Y(SIL.portIn),pe=Y(SIL.portOut);
-  rect(s,0,pi-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--blue);stroke-width:4');rect(s,0,pe-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--red);stroke-width:4');
+  rect(s,0,pi-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--ink);stroke-width:4');rect(s,0,pe-D.port/2,W,D.port,'fill:var(--paper);stroke:var(--ink);stroke-width:4');
   head(s,'c16ar','var(--red)');head(s,'c16ab','var(--blue)');
   const F=(pts,c,id)=>flow(s,pts.map(([x,y])=>[x<0?x:X(x),Y(y)]),c,id);
   F(SIL.flowIn,'var(--blue)','c16ab');F(SIL.flowOut,'var(--red)','c16ar');
@@ -415,7 +417,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
 (function section(){
   const s=document.getElementById('c16-sec'),h=D.in.h;
   rect(s,0,0,OD,OH,S.wall);rect(s,W,W,D.in.d,h,'fill:var(--paper);stroke:none');rect(s,ySil,W,D.sil,h,'fill:var(--paper);stroke:none');
-  rect(s,yLid,0,D.lid,OH,'fill:var(--wool);stroke:var(--board);stroke-width:4');rect(s,yLid,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,yLid+D.lid-D.lidBoard,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,0,OH-W,yLid,W,'fill:var(--wall);stroke:var(--wall-line);stroke-width:4');
+  rect(s,yLid,0,D.lid,OH,'fill:var(--wool);stroke:var(--board);stroke-width:4');rect(s,yLid,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,yLid+D.lid-D.lidBoard,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,0,OH-W,yLid,W,'fill:var(--wool);stroke:var(--wall-line);stroke-width:4');rect(s,0,OH-D.ply.outer,yLid,D.ply.outer,'fill:var(--board);stroke:none');rect(s,0,OH-W+D.foam,yLid,D.ply.inner,'fill:var(--board);stroke:none');rect(s,W,OH-W,D.in.d,D.foam,'fill:var(--mat);stroke:none');rect(s,W,OH-W+D.foam-D.heavy,D.in.d,D.heavy,'fill:var(--heavy);stroke:none');{const F=D.feet;for(let j=0;j<F.n;j++){const y=D.ply.outer+(yLid-2*D.ply.outer-F.size)*j/(F.n-1);rect(s,y,OH,F.size,F.h,'fill:var(--rubber);stroke:none');}line(s,-150,OH+F.h,OD+150,OH+F.h,S.room);text(s,OD/2,OH+F.h+70,'部屋の床（防振ゴムの足 '+F.h+' で浮かせる）',{fs:30,fill:'var(--muted)'});}rect(s,ySil,OH-W,D.sil,D.foam,'fill:var(--foam);stroke:none');
   rect(s,ySil,W+SIL.zone,D.sil,D.mid,'fill:var(--ink)');
   {const f=D.foam,FS='fill:var(--foam);stroke:none';rect(s,W-f,W-f,f,h+f,FS);rect(s,yBack,W-f,f,h+f,FS);rect(s,W-f,W-f,D.in.d+2*f,f,FS);
    const P=D.ply,o=P.outer,ia=P.outer+P.air,sf=D.silFoam;
@@ -423,7 +425,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
    band(s,ySil-o,ia,o,OH-W-ia);band(s,ySil-o,ia,D.sil+o,P.inner);rect(s,ySil,ia+P.inner,D.sil,f,FS);
    zig(s,W-f,W,W-f,W+h,f,1,0);zig(s,yBack+f,W,yBack+f,W+h,f,-1,0);zig(s,W,W-f,yBack,W-f,f,0,1);
    zig(s,ySil,W,ySil,W+h,sf,1,0);zig(s,yLid,W,yLid,W+h,sf,-1,0);
-   text(s,W+D.in.d/2,W+90,'壁・天井：板＋中の吸音材（うす水色）＋板＋ピラミッド吸音材（床は防振マット）',{fs:26,fill:'var(--muted)'});}
+   text(s,W+D.in.d/2,W+80,'壁・天井・床：板＋中の吸音材（うす水色）＋板',{fs:26,fill:'var(--muted)'});text(s,W+D.in.d/2,W+115,'内側：壁と天井はピラミッド吸音材、床は防振マット',{fs:26,fill:'var(--muted)'});}
   const yHu=W+SIL.holeIn[1],yHl=W+SIL.holeOut[1];
   for(const y of [yHu,yHl])rect(s,yBack,y-D.hole/2,W,D.hole,'fill:var(--paper);stroke:var(--ink);stroke-width:4');
   head(s,'c16sr','var(--red)');head(s,'c16sb','var(--blue)');
@@ -438,7 +440,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
 
 (function table(){
   const rows=[['ブースの中の広さ（吸音材の内側・机込み）',`${D.in.w} × ${D.in.d} × 高さ ${D.in.h}`],['外の大きさ（消音箱・ふた込み）',`${OW} × ${OD} × 高さ ${OH}`],
-    ['壁の厚さ（二重構造）',`${W}＝外の板 ${D.ply.outer}＋中の吸音材 ${D.ply.air}（うす水色・グラスウールなど仮）＋内の板 ${D.ply.inner}＋ピラミッド吸音材 ${D.foam}（天井・4面の壁・扉。床は防振マット）`],['机',`奥行 ${D.desk.d}・高さ ${D.desk.h}・左右の壁で支える（脚・前板なし）`],['扉',`左側・幅 ${D.door.w}・手前に蝶番・外開き`],
+    ['床（二重構造）',`${W}＝外の板 ${D.ply.outer}＋中の吸音材 ${D.ply.air}＋内の板 ${D.ply.inner}＋重い遮音マット ${D.heavy}＋防振マット ${D.foam-D.heavy}（消音箱の下は平らな吸音材）`],['防振ゴムの足',`${D.feet.n*D.feet.n}か所（${D.feet.n}×${D.feet.n}）・${D.feet.size}角・高さ ${D.feet.h}。ブース全体を部屋の床から浮かせて、揺れを下の階に伝えにくくする（外の高さは ${OH+D.feet.h}）`],['壁の厚さ（二重構造）',`${W}＝外の板 ${D.ply.outer}＋中の吸音材 ${D.ply.air}（うす水色・グラスウールなど仮）＋内の板 ${D.ply.inner}＋ピラミッド吸音材 ${D.foam}（天井・4面の壁・扉。床は防振マット）`],['机',`奥行 ${D.desk.d}・高さ ${D.desk.h}・左右の壁で支える（脚・前板なし）`],['扉',`左側・幅 ${D.door.w}・手前に蝶番・外開き`],
     ['消音箱の通路の奥行',`${D.sil}（奥の面とふたの内側にピラミッド吸音材 ${D.silFoam} ずつ、空気の通り道は ${D.sil-2*D.silFoam}。横・上・下の面は平らな吸音材 ${D.foam}）`],['点検ぶた（二重構造）',`木・厚さ ${D.lid}＝板 ${D.lidBoard}＋中の吸音材 ${D.lid-2*D.lidBoard}＋板 ${D.lidBoard}・右に蝶番`],
     ['消音箱の部屋',`給気・排気とも5部屋（通路3＋折り返し室2）、折り返し室の幅 ${D.turn}`],
     ['仕切り板の厚さ',`${D.part}（給気/排気の境は ${D.mid}）`],['部屋どうしの口',`各 ${D.gap}（4か所 × 2系統）`],
@@ -447,7 +449,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
 })();
 
 /* ---------- 3D (orthographic, painter's sort; x = width from door side, y = depth from front, z = height) ---------- */
-const C={wool:[184,218,230],foam:[113,157,169],wood:[224,182,133],woodDark:[196,152,104],lid:[214,176,128],door:[233,205,150],part:[70,82,96],hole:[25,30,38],desk:[178,132,90]};
+const C={rubber:[59,61,66],heavy:[74,74,82],mat:[111,106,100],wool:[184,218,230],foam:[113,157,169],wood:[224,182,133],woodDark:[196,152,104],lid:[214,176,128],door:[233,205,150],part:[70,82,96],hole:[25,30,38],desk:[178,132,90]};
 // Boxes are 8 corner points (axis-aligned or rotated); decals are flat discs stuck on one face of a box.
 function corners(x0,y0,z0,x1,y1,z1){return [[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];}
 function leaf(hx,hy,dirx,diry,len,thick,z0,z1,off=0){ // a panel hinged on a vertical axis at (hx,hy)
@@ -477,31 +479,40 @@ function model(st){
   const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia)).layer=true;const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));board.layer=true;const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
     mesh([g,'foam'],C.foam,pyramids(M,u0,u1,v0,v1,ib+pb,ph,pp,skip));fb.board=board;return fb;};
   const skin=(...r)=>{const b=box(...r);b.skin=true;return b;};
-  skin('floor',C.woodDark,0,0,0,OW,yLid,W);
+  // floor, also double: outer board + absorber + inner board, then an anti-vibration mat in the booth (flat absorber in the silencer)
+  skin('floor',C.woodDark,0,0,0,OW,yLid,o);
+  skin('floor',C.woodDark,0,0,o,OW,o,W);skin('floor',C.woodDark,0,o,o,o,yLid,W);skin('floor',C.woodDark,OW-o,o,o,OW,yLid,W);
+  add(['floor','foam'],C.wool,corners(o,o,o,OW-o,yLid,ia)).layer=true;
+  {const fb=box('floor',C.woodDark,o,o,ia,OW-o,yLid,ib);fb.layer=true;}
+  box('floor',C.woodDark,o,o,ib,W,yLid,W);box('floor',C.woodDark,OW-W,o,ib,OW-o,yLid,W);box('floor',C.woodDark,W,o,ib,OW-W,W,W);box('floor',C.woodDark,W,yBack,ib,OW-W,ySil,W);
+  // heavy sound-blocking mat under the anti-vibration mat (makes the floor heavier)
+  box('floor',C.heavy,W,W,ib,OW-W,yBack,ib+D.heavy);box('floor',C.mat,W,W,ib+D.heavy,OW-W,yBack,W);
+  // anti-vibration rubber feet lift the whole booth off the room floor
+  {const F=D.feet,n=F.n;for(let i=0;i<n;i++)for(let j=0;j<n;j++){const x=o+(OW-2*o-F.size)*i/(n-1),y=o+(yLid-2*o-F.size)*j/(n-1);box('floor',C.rubber,x,y,-F.h,x+F.size,y+F.size,0);}}add(['floor','foam'],C.foam,corners(W,ySil,ib,OW-W,yLid,W));
   // outer skin (one board all round)
   skin('roof',C.wood,0,0,OH-o,OW,yLid,OH);
   skin('front',C.wood,0,0,W,OW,o,OH-o);
   skin('right',C.wood,OW-o,o,W,OW,yLid,OH-o);
   skin('left',C.wood,0,o,W,o,D.door.from,OH-o);const lw=skin('left',C.wood,0,D.door.from+D.door.w,W,o,yLid,OH-o);skin('left',C.wood,0,D.door.from,top,o,D.door.from+D.door.w,OH-o);
-  lw.decals.push({n:[-1,0,0],c:[31,99,198],p:disc(-2,yc,Z(SIL.portIn),D.port/2,'x')},{n:[-1,0,0],c:[211,58,44],p:disc(-2,yc,Z(SIL.portOut),D.port/2,'x')});
   // booth: inner boards + pyramid absorber on every wall and the ceiling
-  const near=(cx,cz)=>[SIL.holeIn,SIL.holeOut].some(([hx,hy])=>Math.hypot(cx-(W+hx),cz-Z(hy))<D.hole*0.9);
+  const near=(cx,cz)=>[SIL.holeIn,SIL.holeOut].some(([hx,hy])=>Math.hypot(cx-(W+hx),cz-Z(hy))<D.hole/2+pp*0.75);
   lining('front',FY(0,1),W-f,OW-W+f,W,top);
   lining('right',FX(OW,-1),W,yBack,W,top);
   lining('left',FX(0,1),W,D.door.from,W,top);lining('left',FX(0,1),D.door.from+D.door.w,yBack,W,top);box('left',C.wood,ia,D.door.from,top-0,ib,D.door.from+D.door.w,top+f);
   lining('roof',FZ(OH,-1),W-f,OW-W+f,W-f,yBack+f);
   const bf=lining('back',FY(ySil,-1),W-f,OW-W+f,W,top,near);
+  // the whole cavity between the outer and inner boards is filled (no open tunnels at corners or above the walls)
+  const fill=(g,...r)=>{add([g,'foam'],C.wool,corners(...r)).layer=true;};
+  fill('left',o,o,W,ia,D.door.from,OH-o);fill('left',o,D.door.from+D.door.w,W,ia,ySil-o,OH-o);fill('left',o,D.door.from,top,ia,D.door.from+D.door.w,OH-o);
+  fill('right',OW-ia,o,W,OW-o,ySil-o,OH-o);fill('front',ia,o,W,OW-ia,ia,OH-o);fill('back',ia,yBack,top,OW-ia,ySil-o,OH-o);
   // back wall: silencer-side board, the air layer between
   const bw=box('back',C.wood,ia,ySil-o,W,OW-ia,ySil,top);
-  for(const [hx,hy] of [SIL.holeIn,SIL.holeOut]){bf.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,yBack-2+0,Z(hy),D.hole/2,'y')});
-    bf.board.decals.push({n:[0,-1,0],c:C.hole,p:disc(W+hx,ySil-ib-2,Z(hy),D.hole/2,'y')});bw.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+2,Z(hy),D.hole/2,'y')});}
   // silencer box: inner boards on the sides/top, flat lining on side faces, pyramids on the back face and on the lid
   box('left',C.wood,ia,ySil-o,W,ib,yLid,top+f);box('right',C.wood,OW-ib,ySil-o,W,OW-ia,yLid,top+f);add(['left','foam'],C.wool,corners(o,ySil-o,W,ia,yLid,OH-o));add(['right','foam'],C.wool,corners(OW-ia,ySil-o,W,OW-o,yLid,OH-o));add(['roof','foam'],C.wool,corners(ia,ySil-o,top+f+P.inner,OW-ia,yLid,OH-o));box('roof',C.wood,ia,ySil-o,top+f,OW-ia,yLid,top+f+P.inner);
   add(['left','foam'],C.foam,corners(ib,ySil,W,W,yLid,top)).only=true;add(['right','foam'],C.foam,corners(OW-W,ySil,W,OW-ib,yLid,top)).only=true;
   add(['roof','foam'],C.foam,corners(W,ySil,top,OW-W,yLid,top+f)).only=true;
   const sf=D.silFoam,partSkip=(cu,cv)=>near(cu,cv)||SIL.parts.some(([x,y,w,h])=>cu>W+x-pp/2&&cu<W+x+w+pp/2&&cv>Z(y+h)-pp/2&&cv<Z(y)+pp/2);
-  const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),W,OW-W,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip));
-  for(const [hx,hy] of [SIL.holeIn,SIL.holeOut])sb.decals.push({n:[0,1,0],c:C.hole,p:disc(W+hx,ySil+sf/3+2,Z(hy),D.hole/2,'y')});
+  const sb=add(['back','foam'],C.foam,slab(FY(ySil,1),ia,OW-ia,W,top,0,sf/3));sb.only=true;mesh(['back','foam'],C.foam,pyramids(FY(ySil,1),W,OW-W,W,top,sf/3,sf*2/3,100,partSkip));
   // door (double board + pyramids on the inside), hinged at its front end
   const a=st.doorOpen?70*Math.PI/180:0,DM=hinged(0,D.door.from,a,0,1,1,0);
   add('door',C.door,slab(DM,0,D.door.w,W,top,0,o));add(['door','foam'],C.wool,slab(DM,0,D.door.w,W,top,o,ia));add('door',C.door,slab(DM,0,D.door.w,W,top,ia,ib));
@@ -512,9 +523,12 @@ function model(st){
   const LM=hinged(OW,OD,st.lidOpen?-105*Math.PI/180:0,-1,0,0,-1),lb=D.lidBoard;
   add('lid',C.lid,slab(LM,0,OW,0,OH,0,lb));add('lid',C.lid,slab(LM,0,OW,0,OH,D.lid-lb,D.lid));
   add(['lid','foam'],C.wool,slab(LM,lb,OW-lb,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,0,lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,OW,OH-lb,OH,lb,D.lid-lb));add('lid',C.lid,slab(LM,OW-lb,OW,lb,OH-lb,lb,D.lid-lb));add('lid',C.lid,slab(LM,0,lb,lb,OH-lb,lb,D.lid-lb));
-  add(['lid','foam'],C.foam,slab(LM,W,OW-W,W,top,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
+  add(['lid','foam'],C.foam,slab(LM,0,OW,0,OH,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
   for(const b of B)if([].concat(b.g).some(g=>g==='door'||g==='lid'))b.outside=true;
-  return B.filter(b=>![].concat(b.g).some(g=>st.hide.has(g)));
+  // Four real openings (no colour): two between the room and the silencer, two from the silencer to the outside.
+  const holes=[...[SIL.holeIn,SIL.holeOut].map(([hx,hy])=>({wall:'back',axis:1,c:[W+hx,0,Z(hy)],r:D.hole/2,a0:yBack,a1:ySil+sf/3})),
+    ...[SIL.portIn,SIL.portOut].map(p=>({wall:'left',axis:0,c:[0,yc,Z(p)],r:D.port/2,a0:0,a1:W}))].filter(h=>!st.hide.has(h.wall));
+  const out=B.filter(b=>![].concat(b.g).some(g=>st.hide.has(g)));out.holes=holes;return out;
 }
 function flows(){
   const Z=y=>OH-W-y,yc=ySil+D.sil/2,map=pts=>pts.map(([x,y])=>[x<0?x:W+x,yc,Z(y)]);
@@ -525,7 +539,9 @@ function flows(){
 const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[3,2,6,7],[0,3,7,4],[1,2,6,5]];
 const cv=document.getElementById('c16-cv'),stage=document.getElementById('c16-stage'),ctx=cv.getContext('2d');
 const st={yaw:-0.6,pitch:0.42,zoom:1,air:false,doorOpen:true,lidOpen:true,hide:new Set()};
-let Wc=0,Hc=0,dpr=1,lastOrder=[];
+let Wc=0,Hc=0,dpr=1,lastOrder=[],HOLES=[];
+// points on the rim of an opening, in the plane where its axis coordinate equals a
+function ring(h,a,N=24){const k=[0,1,2].filter(x=>x!==h.axis),pts=[];for(let i=0;i<N;i++){const t=i/N*2*Math.PI,p=h.c.slice();p[h.axis]=a;p[k[0]]+=h.r*Math.cos(t);p[k[1]]+=h.r*Math.sin(t);pts.push(p);}return pts;}
 // World x runs from the seated person's left (door side) to their right, so the view mirrors x.
 function rot(x,y,z){const cs=Math.cos(st.yaw),sn=Math.sin(st.yaw),cp=Math.cos(st.pitch),sp=Math.sin(st.pitch),x1=x*cs-y*sn,y1=x*sn+y*cs;return {x:x1,y:z*cp+y1*sp,d:y1*cp-z*sp};}
 function proj(p){return rot(OW/2-p[0],p[1]-OD/2,p[2]-OH/2);}
@@ -540,8 +556,9 @@ function visibleModel(){
   const M=model(st),faces=[];
   for(const b of M){if(!b.v)continue;const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);b.covered=[];
     FACES.forEach((f,fi)=>{const p=f.map(i=>b.v[i]),n=faceNormal(b.v,f,cen),c=p.reduce((a,q)=>[a[0]+q[0]/4,a[1]+q[1]/4,a[2]+q[2]/4],[0,0,0]);faces.push({b,fi,p,n,c,off:dot(n,p[0])});});}
-  const inside=(pt,F)=>{let pos=0,neg=0;for(let k=0;k<4;k++){const a=F.p[k],b2=F.p[(k+1)%4],v=dot(cross(sub(b2,a),sub(pt,a)),F.n);if(v>1e-6)pos++;else if(v<-1e-6)neg++;}return !(pos&&neg);};
-  for(const A of faces)for(const B of faces){if(A.b===B.b||dot(A.n,B.n)>-.999||Math.abs(A.off+B.off)>.6)continue;if(inside(A.c,B)){A.b.covered[A.fi]=true;break;}}
+  const area=F=>Math.hypot(...cross(sub(F.p[1],F.p[0]),sub(F.p[3],F.p[0])));
+  const inside=(pt,F)=>{let pos=0,neg=0;for(let k=0;k<4;k++){const a=F.p[k],b2=F.p[(k+1)%4],e=sub(b2,a),v=dot(cross(e,sub(pt,a)),F.n)/(Math.hypot(...e)||1);if(v>.5)pos++;else if(v<-.5)neg++;}return !(pos&&neg);};
+  for(const A of faces)for(const B of faces){if(A.b===B.b||dot(A.n,B.n)>-.999||Math.abs(A.off+B.off)>.6)continue;if(A.p.every(pt=>inside(pt,B))){A.b.covered[A.fi]=true;break;}}
   // Cut edges of wall layers that face a nearby board (a closed corner pocket) are hidden too.
   const boxes=M.filter(b=>b.v).map(b=>{const xs=b.v.map(q=>q[0]),ys=b.v.map(q=>q[1]),zs=b.v.map(q=>q[2]),lo=[Math.min(...xs),Math.min(...ys),Math.min(...zs)],hi=[Math.max(...xs),Math.max(...ys),Math.max(...zs)];
     const vol=(hi[0]-lo[0])*(hi[1]-lo[1])*(hi[2]-lo[2]),aa=b.v.every(q=>q.every((x,k)=>Math.abs(x-lo[k])<.01||Math.abs(x-hi[k])<.01));return aa&&vol>0?{b,lo,hi}:null;}).filter(Boolean);
@@ -556,7 +573,8 @@ function draw(){
   const polys=[],TILE=220;
   const shade=(c,n,nd)=>{const light=.62+.38*Math.max(0,n[2]*.8+(-nd)*.35-n[0]*.2);return c.map(x=>Math.min(255,Math.round(x*light)));};
   const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
-  for(const b of visibleModel()){
+  const VM=visibleModel();HOLES=VM.holes||[];
+  for(const b of VM){
     if(b.tris){for(const t of b.tris){const nd=viewDepthOfNormal(t.n);if(nd>=0)continue;const pts=t.p.map(proj);polys.push({g:b.g,d:(pts[0].d+pts[1].d+pts[2].d)/3-1,pts,col:shade(b.c,t.n,nd),thin:true});}continue;}
     const cen=b.v.reduce((s,q)=>[s[0]+q[0]/8,s[1]+q[1]/8,s[2]+q[2]/8],[0,0,0]);
     const thinAxis=b.only?(()=>{const e=[sub(b.v[1],b.v[0]),sub(b.v[3],b.v[0]),sub(b.v[4],b.v[0])].map(x=>Math.hypot(...x));const k=e.indexOf(Math.min(...e));return sub([b.v[1],b.v[3],b.v[4]][k],b.v[0]).map(x=>x/e[k]);})():null;
@@ -569,15 +587,26 @@ function draw(){
       const T=hull?120:TILE,bias=hull?60:0;
       const col=shade(b.c,n,nd),nu=Math.max(1,Math.ceil(Math.hypot(...sub(q[1],q[0]))/T)),nv=Math.max(1,Math.ceil(Math.hypot(...sub(q[3],q[0]))/T));
       const at=(u,v)=>lerp(lerp(q[0],q[1],u),lerp(q[3],q[2],u),v);
-      for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const pts=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)].map(proj);
-        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4-bias,pts,col,tile:nu*nv>1});}
-      for(const dc of b.decals)if(dot(dc.n,n)>.99){const pts=dc.p.map(proj);polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/pts.length-75-bias,pts,col:dc.c,flat:true});}
+      // openings that pass through this face's plane
+      const cuts=HOLES.filter(h=>Math.abs(n[h.axis])>.99&&fc[h.axis]>=h.a0-1&&fc[h.axis]<=h.a1+1);
+      for(let i=0;i<nu;i++)for(let j=0;j<nv;j++){const w=[at(i/nu,j/nv),at((i+1)/nu,j/nv),at((i+1)/nu,(j+1)/nv),at(i/nu,(j+1)/nv)],pts=w.map(proj);
+        const hs=cuts.filter(h=>{const k=[0,1,2].filter(a=>a!==h.axis);return k.every(a=>Math.min(...w.map(p=>p[a]))<h.c[a]+h.r&&Math.max(...w.map(p=>p[a]))>h.c[a]-h.r);});
+        const cut=hs.length?hs.map(h=>ring(h,fc[h.axis]).map(proj)):null;
+        polys.push({g:b.g,d:pts.reduce((s,p)=>s+p.d,0)/4-bias,pts,col,tile:nu*nv>1,cut});}
     }
   }
+  // the inside of each opening: a short tube, so the wall layers are not seen through it
+  for(const h of HOLES){const N=20;for(let k=0;k<N;k++){const a=ring(h,h.a0,N),bq=ring(h,h.a1,N),k2=(k+1)%N,quad=[a[k],a[k2],bq[k2],bq[k]];
+    const mid=quad.reduce((s,p)=>[s[0]+p[0]/4,s[1]+p[1]/4,s[2]+p[2]/4],[0,0,0]),rad=sub(mid,h.c).map((x,i)=>i===h.axis?0:x),L=Math.hypot(...rad),nin=rad.map(x=>-x/L);
+    const nd=viewDepthOfNormal(nin);if(nd>=0)continue;const pts=quad.map(proj);polys.push({g:['hole',h.wall],d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col:shade([150,118,84],nin,nd),thin:true});}}
   polys.sort((p,q)=>q.d-p.d);
   lastOrder=polys.map(p=>{const xy=p.pts.map(S2);return {g:p.g,d:p.d,box:[Math.min(...xy.map(a=>a[0])),Math.min(...xy.map(a=>a[1])),Math.max(...xy.map(a=>a[0])),Math.max(...xy.map(a=>a[1]))]};});
   ctx.lineJoin='round';
-  for(const p of polys){ctx.beginPath();p.pts.forEach((pt,i)=>{const [x,y]=S2(pt);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();
+  const path=pp=>{pp.forEach((pt,i)=>{const [x,y]=S2(pt);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();};
+  for(const p of polys){
+    if(p.cut){ctx.save();ctx.beginPath();path(p.pts);ctx.clip();ctx.beginPath();path(p.pts);for(const c of p.cut)path(c);ctx.fillStyle=`rgb(${p.col})`;ctx.fill('evenodd');ctx.restore();
+      ctx.beginPath();path(p.pts);ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();continue;}
+    ctx.beginPath();path(p.pts);
     ctx.fillStyle=`rgb(${p.col})`;ctx.fill();if(p.tile){ctx.strokeStyle=`rgb(${p.col})`;ctx.lineWidth=.8;ctx.stroke();}else if(!p.flat){ctx.strokeStyle=p.thin?'rgba(40,70,80,.25)':'rgba(40,50,60,.35)';ctx.lineWidth=p.thin?.6:1;ctx.stroke();}}
   if(st.air)for(const f of flows()){
     const pts=f.p.map(p=>S2(proj(p)));ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
@@ -609,6 +638,6 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
-window.C16_TEST={model:()=>model(st),view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
+window.C16_TEST={model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastOrder;}};
 })();
 </script></body></html>

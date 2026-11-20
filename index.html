@@ -515,8 +515,8 @@ function model(st){
   add(['lid','foam'],C.foam,slab(LM,0,OW,0,OH,D.lid,D.lid+sf/3)).only=true;mesh(['lid','foam'],C.foam,pyramids(LM,W,OW-W,W,top,D.lid+sf/3,sf*2/3,100,(cu,cv)=>partSkip(OW-cu,cv)));
   for(const b of B)if([].concat(b.g).some(g=>g==='door'||g==='lid'))b.outside=true;
   // Four real openings (no colour): two between the room and the silencer, two from the silencer to the outside.
-  const holes=[...[SIL.holeIn,SIL.holeOut].map(([hx,hy])=>({axis:1,c:[W+hx,0,Z(hy)],r:D.hole/2,a0:yBack,a1:ySil+sf/3})),
-    ...[SIL.portIn,SIL.portOut].map(p=>({axis:0,c:[0,yc,Z(p)],r:D.port/2,a0:0,a1:W}))];
+  const holes=[...[SIL.holeIn,SIL.holeOut].map(([hx,hy])=>({wall:'back',axis:1,c:[W+hx,0,Z(hy)],r:D.hole/2,a0:yBack,a1:ySil+sf/3})),
+    ...[SIL.portIn,SIL.portOut].map(p=>({wall:'left',axis:0,c:[0,yc,Z(p)],r:D.port/2,a0:0,a1:W}))].filter(h=>!st.hide.has(h.wall));
   const out=B.filter(b=>![].concat(b.g).some(g=>st.hide.has(g)));out.holes=holes;return out;
 }
 function flows(){
@@ -587,7 +587,7 @@ function draw(){
   // the inside of each opening: a short tube, so the wall layers are not seen through it
   for(const h of HOLES){const N=20;for(let k=0;k<N;k++){const a=ring(h,h.a0,N),bq=ring(h,h.a1,N),k2=(k+1)%N,quad=[a[k],a[k2],bq[k2],bq[k]];
     const mid=quad.reduce((s,p)=>[s[0]+p[0]/4,s[1]+p[1]/4,s[2]+p[2]/4],[0,0,0]),rad=sub(mid,h.c).map((x,i)=>i===h.axis?0:x),L=Math.hypot(...rad),nin=rad.map(x=>-x/L);
-    const nd=viewDepthOfNormal(nin);if(nd>=0)continue;const pts=quad.map(proj);polys.push({g:'hole',d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col:shade([150,118,84],nin,nd),thin:true});}}
+    const nd=viewDepthOfNormal(nin);if(nd>=0)continue;const pts=quad.map(proj);polys.push({g:['hole',h.wall],d:pts.reduce((s,p)=>s+p.d,0)/4,pts,col:shade([150,118,84],nin,nd),thin:true});}}
   polys.sort((p,q)=>q.d-p.d);
   lastOrder=polys.map(p=>{const xy=p.pts.map(S2);return {g:p.g,d:p.d,box:[Math.min(...xy.map(a=>a[0])),Math.min(...xy.map(a=>a[1])),Math.max(...xy.map(a=>a[0])),Math.max(...xy.map(a=>a[1]))]};});
   ctx.lineJoin='round';

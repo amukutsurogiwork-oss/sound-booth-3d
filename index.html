@@ -33,7 +33,7 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
 </style></head><body>
 <section id="c16" aria-labelledby="c16-title">
 <style>
-#c16{--paper:#ffffff;--ink:#1d2733;--muted:#5d6b7a;--rule:#c9d2db;--wall:#dfe5ec;--wall-line:#3a4756;--red:#d33a2c;--blue:#1f63c6;--fan:#7a4fc0;--foam:#8fb6c2;--board:#9a7b55;--wool:#d3eaf1;--room:#9aa7b4;
+#c16{--paper:#ffffff;--ink:#1d2733;--muted:#5d6b7a;--rule:#c9d2db;--wall:#dfe5ec;--wall-line:#3a4756;--red:#d33a2c;--blue:#1f63c6;--fan:#7a4fc0;--foam:#8fb6c2;--board:#9a7b55;--wool:#d3eaf1;--mat:#6f6a64;--room:#9aa7b4;
   margin:0;background:#f4f7f9;padding:0 0 8px}
 #c16 .c16-old{background:#176e9f;color:#fff;font-size:14px;font-weight:700;padding:12px 14px;margin:16px 0 0}
 #c16 .c16-head{background:#fff;padding:14px;border-bottom:1px solid #d9e1e6}
@@ -415,7 +415,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
 (function section(){
   const s=document.getElementById('c16-sec'),h=D.in.h;
   rect(s,0,0,OD,OH,S.wall);rect(s,W,W,D.in.d,h,'fill:var(--paper);stroke:none');rect(s,ySil,W,D.sil,h,'fill:var(--paper);stroke:none');
-  rect(s,yLid,0,D.lid,OH,'fill:var(--wool);stroke:var(--board);stroke-width:4');rect(s,yLid,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,yLid+D.lid-D.lidBoard,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,0,OH-W,yLid,W,'fill:var(--wall);stroke:var(--wall-line);stroke-width:4');
+  rect(s,yLid,0,D.lid,OH,'fill:var(--wool);stroke:var(--board);stroke-width:4');rect(s,yLid,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,yLid+D.lid-D.lidBoard,0,D.lidBoard,OH,'fill:var(--board);stroke:none');rect(s,0,OH-W,yLid,W,'fill:var(--wool);stroke:var(--wall-line);stroke-width:4');rect(s,0,OH-D.ply.outer,yLid,D.ply.outer,'fill:var(--board);stroke:none');rect(s,0,OH-W+D.foam,yLid,D.ply.inner,'fill:var(--board);stroke:none');rect(s,W,OH-W,D.in.d,D.foam,'fill:var(--mat);stroke:none');rect(s,ySil,OH-W,D.sil,D.foam,'fill:var(--foam);stroke:none');
   rect(s,ySil,W+SIL.zone,D.sil,D.mid,'fill:var(--ink)');
   {const f=D.foam,FS='fill:var(--foam);stroke:none';rect(s,W-f,W-f,f,h+f,FS);rect(s,yBack,W-f,f,h+f,FS);rect(s,W-f,W-f,D.in.d+2*f,f,FS);
    const P=D.ply,o=P.outer,ia=P.outer+P.air,sf=D.silFoam;
@@ -423,7 +423,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
    band(s,ySil-o,ia,o,OH-W-ia);band(s,ySil-o,ia,D.sil+o,P.inner);rect(s,ySil,ia+P.inner,D.sil,f,FS);
    zig(s,W-f,W,W-f,W+h,f,1,0);zig(s,yBack+f,W,yBack+f,W+h,f,-1,0);zig(s,W,W-f,yBack,W-f,f,0,1);
    zig(s,ySil,W,ySil,W+h,sf,1,0);zig(s,yLid,W,yLid,W+h,sf,-1,0);
-   text(s,W+D.in.d/2,W+90,'壁・天井：板＋中の吸音材（うす水色）＋板＋ピラミッド吸音材（床は防振マット）',{fs:26,fill:'var(--muted)'});}
+   text(s,W+D.in.d/2,W+80,'壁・天井・床：板＋中の吸音材（うす水色）＋板',{fs:26,fill:'var(--muted)'});text(s,W+D.in.d/2,W+115,'内側：壁と天井はピラミッド吸音材、床は防振マット',{fs:26,fill:'var(--muted)'});}
   const yHu=W+SIL.holeIn[1],yHl=W+SIL.holeOut[1];
   for(const y of [yHu,yHl])rect(s,yBack,y-D.hole/2,W,D.hole,'fill:var(--paper);stroke:var(--ink);stroke-width:4');
   head(s,'c16sr','var(--red)');head(s,'c16sb','var(--blue)');
@@ -438,7 +438,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
 
 (function table(){
   const rows=[['ブースの中の広さ（吸音材の内側・机込み）',`${D.in.w} × ${D.in.d} × 高さ ${D.in.h}`],['外の大きさ（消音箱・ふた込み）',`${OW} × ${OD} × 高さ ${OH}`],
-    ['壁の厚さ（二重構造）',`${W}＝外の板 ${D.ply.outer}＋中の吸音材 ${D.ply.air}（うす水色・グラスウールなど仮）＋内の板 ${D.ply.inner}＋ピラミッド吸音材 ${D.foam}（天井・4面の壁・扉。床は防振マット）`],['机',`奥行 ${D.desk.d}・高さ ${D.desk.h}・左右の壁で支える（脚・前板なし）`],['扉',`左側・幅 ${D.door.w}・手前に蝶番・外開き`],
+    ['床（二重構造）',`${W}＝外の板 ${D.ply.outer}＋中の吸音材 ${D.ply.air}＋内の板 ${D.ply.inner}＋防振マット ${D.foam}（消音箱の下は平らな吸音材）`],['壁の厚さ（二重構造）',`${W}＝外の板 ${D.ply.outer}＋中の吸音材 ${D.ply.air}（うす水色・グラスウールなど仮）＋内の板 ${D.ply.inner}＋ピラミッド吸音材 ${D.foam}（天井・4面の壁・扉。床は防振マット）`],['机',`奥行 ${D.desk.d}・高さ ${D.desk.h}・左右の壁で支える（脚・前板なし）`],['扉',`左側・幅 ${D.door.w}・手前に蝶番・外開き`],
     ['消音箱の通路の奥行',`${D.sil}（奥の面とふたの内側にピラミッド吸音材 ${D.silFoam} ずつ、空気の通り道は ${D.sil-2*D.silFoam}。横・上・下の面は平らな吸音材 ${D.foam}）`],['点検ぶた（二重構造）',`木・厚さ ${D.lid}＝板 ${D.lidBoard}＋中の吸音材 ${D.lid-2*D.lidBoard}＋板 ${D.lidBoard}・右に蝶番`],
     ['消音箱の部屋',`給気・排気とも5部屋（通路3＋折り返し室2）、折り返し室の幅 ${D.turn}`],
     ['仕切り板の厚さ',`${D.part}（給気/排気の境は ${D.mid}）`],['部屋どうしの口',`各 ${D.gap}（4か所 × 2系統）`],
@@ -447,7 +447,7 @@ function band(s,x,y,w,h){rect(s,x,y,w,h,'fill:var(--board);stroke:none');}
 })();
 
 /* ---------- 3D (orthographic, painter's sort; x = width from door side, y = depth from front, z = height) ---------- */
-const C={wool:[184,218,230],foam:[113,157,169],wood:[224,182,133],woodDark:[196,152,104],lid:[214,176,128],door:[233,205,150],part:[70,82,96],hole:[25,30,38],desk:[178,132,90]};
+const C={mat:[111,106,100],wool:[184,218,230],foam:[113,157,169],wood:[224,182,133],woodDark:[196,152,104],lid:[214,176,128],door:[233,205,150],part:[70,82,96],hole:[25,30,38],desk:[178,132,90]};
 // Boxes are 8 corner points (axis-aligned or rotated); decals are flat discs stuck on one face of a box.
 function corners(x0,y0,z0,x1,y1,z1){return [[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];}
 function leaf(hx,hy,dirx,diry,len,thick,z0,z1,off=0){ // a panel hinged on a vertical axis at (hx,hy)
@@ -477,7 +477,13 @@ function model(st){
   const lining=(g,M,u0,u1,v0,v1,skip)=>{add([g,'foam'],C.wool,slab(M,u0,u1,v0,v1,o,ia)).layer=true;const board=add(g,C.wood,slab(M,u0,u1,v0,v1,ia,ib));board.layer=true;const fb=add([g,'foam'],C.foam,slab(M,u0,u1,v0,v1,ib,ib+pb));fb.only=true;
     mesh([g,'foam'],C.foam,pyramids(M,u0,u1,v0,v1,ib+pb,ph,pp,skip));fb.board=board;return fb;};
   const skin=(...r)=>{const b=box(...r);b.skin=true;return b;};
-  skin('floor',C.woodDark,0,0,0,OW,yLid,W);
+  // floor, also double: outer board + absorber + inner board, then an anti-vibration mat in the booth (flat absorber in the silencer)
+  skin('floor',C.woodDark,0,0,0,OW,yLid,o);
+  skin('floor',C.woodDark,0,0,o,OW,o,W);skin('floor',C.woodDark,0,o,o,o,yLid,W);skin('floor',C.woodDark,OW-o,o,o,OW,yLid,W);
+  add(['floor','foam'],C.wool,corners(o,o,o,OW-o,yLid,ia)).layer=true;
+  {const fb=box('floor',C.woodDark,o,o,ia,OW-o,yLid,ib);fb.layer=true;}
+  box('floor',C.woodDark,o,o,ib,W,yLid,W);box('floor',C.woodDark,OW-W,o,ib,OW-o,yLid,W);box('floor',C.woodDark,W,o,ib,OW-W,W,W);box('floor',C.woodDark,W,yBack,ib,OW-W,ySil,W);
+  box('floor',C.mat,W,W,ib,OW-W,yBack,W);add(['floor','foam'],C.foam,corners(W,ySil,ib,OW-W,yLid,W));
   // outer skin (one board all round)
   skin('roof',C.wood,0,0,OH-o,OW,yLid,OH);
   skin('front',C.wood,0,0,W,OW,o,OH-o);

@@ -97,6 +97,8 @@ button.active{background:#d8ecf9;border-color:#6ea8ce;color:#0c5686}button:focus
   <li>下の階への揺れ対策：ブースを防振ゴムの足で床から浮かせ、床に重い遮音マットと防振マットを入れる。</li>
 </ol></div>
 <div class="c16-card"><h3>寸法の一覧（mm・仮）</h3><table id="c16-dims"></table></div>
+<div class="c16-card"><h3>材料と数量（目安）</h3><table id="c16-bom"></table><p class="c16-note">3Dモデルの部品から数えた目安です。板の枚数は 910×1820 の板で切りしろ15％込み（大きい面はつなぎ合わせ）。金具・ネジ・接着剤・コーキングは別。値段は入れていません。</p></div>
+<div class="c16-card"><h3>図面の食い違いチェック</h3><p class="c16-note" id="c16-check-sum"></p><table id="c16-check"></table></div>
 <div class="c16-card"><h3>まだ決まっていないこと</h3><ol>
   <li>折り返し室の幅（今は 200）。</li>
   <li>点検ぶたは右（部屋の角側）の蝶番。全開には後ろに約1.2mの空きが要ります。</li>
@@ -647,6 +649,69 @@ window.addEventListener('beforeprint',()=>{const h=$('c16-p2d').hidden;$('c16-p2
 function mode2(d){$('c16-p3d').hidden=!d;$('c16-p2d').hidden=d;$('c16-b3d').classList.toggle('active',d);$('c16-b2d').classList.toggle('active',!d);if(!d)fitDrawings();if(d)requestAnimationFrame(resize);}
 $('c16-b3d').onclick=()=>mode2(true);$('c16-b2d').onclick=()=>mode2(false);
 window.addEventListener('resize',resize);resize();
-window.C16_TEST={dims:{yBack,ySil,top:OH-W,OH,mid:OW/2,ia:D.ply.outer+D.ply.air,ib:D.ply.outer+D.ply.air+D.ply.inner,o:D.ply.outer},wool:C.wool,model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastPrims;}};
+// Materials list (rough): every part of the 3D model (doors and lid closed) is put into one material row; nothing is left out.
+const SHEET=0.91*1.82;
+function boundsOf(v){return [[0,1,2].map(k=>Math.min(...v.map(q=>q[k]))),[0,1,2].map(k=>Math.max(...v.map(q=>q[k])))];}
+function bom(){
+  const m=model({doorOpen:false,lidOpen:false,air:false,hide:new Set()}),acc={},left=[],same=(a,b)=>a.join()===b.join();
+  const put=(k,a)=>{acc[k]=(acc[k]||0)+a;};
+  for(const b of m){if(!b.v)continue; // pyramids are counted with the sheet they sit on
+    const [lo,hi]=boundsOf(b.v),d=[0,1,2].map(k=>hi[k]-lo[k]).sort((x,y)=>x-y),t=Math.round(d[0]),a=d[1]*d[2]/1e6,c=b.c;
+    if(same(c,C.rubber))put('feet',1);else if(same(c,C.wool)&&t===D.ply.air)put('wool',a);
+    else if(same(c,C.foam))put(b.carries?(b.carries>20?'pyr50':'pyr30'):'flat',a);
+    else if(same(c,C.heavy))put('heavy',a);else if(same(c,C.mat))put('mat',a);else if(same(c,C.desk))put('desk',a);
+    else if([C.wood,C.woodDark,C.door,C.lid,C.part].some(x=>same(c,x))){if(t===D.ply.outer)put('p12',a);else if(t===D.ply.inner)put('p24',a);
+      else if(t%D.part===0)put('p18',a*t/D.part);else if(t===W-D.ply.outer-D.ply.air-D.ply.inner)put('base',a);else left.push([].concat(b.g).join('/')+' '+t);}
+    else left.push([].concat(b.g).join('/')+' '+t);}
+  const r2=x=>Math.round(x*100)/100,sheets=k=>Math.ceil((acc[k]||0)*1.15/SHEET);
+  const sheet=(key,name)=>({key,name,area:r2(acc[key]||0),qty:sheets(key),unit:'枚'});
+  const area=(key,name)=>({key,name,area:r2(acc[key]||0),qty:null,unit:'㎡'});
+  const gasket=2*(D.door.w+D.in.h)/1000+2*(OW+OH)/1000;
+  const rows=[sheet('p12',`合板 ${D.ply.outer}mm（外の板・扉の外側）`),sheet('p24',`合板 ${D.ply.inner}mm（内の板・扉の内側）`),sheet('p18',`板 ${D.part}mm（消音箱の仕切り・点検ぶた）`),
+    area('base',`床の下地 ${W-D.ply.outer-D.ply.air-D.ply.inner}mm（角材か板）`),{key:'desk',name:'机の天板 30mm',area:r2(acc.desk||0),qty:1,unit:'枚'},
+    area('wool',`吸音ウール ${D.ply.air}mm（壁・床・天井・扉・ふたの中）`),area('pyr50',`ピラミッド吸音材 ${D.foam}mm（ブースの中・扉）`),area('pyr30',`ピラミッド吸音材 ${D.silFoam}mm（消音箱の奥・ふた）`),
+    area('flat',`平らな吸音材 ${D.foam}mm（消音箱の横・上・下）`),area('heavy',`重い遮音マット ${D.heavy}mm（床）`),area('mat',`防振マット ${D.foam-D.heavy}mm（床）`),
+    {key:'feet',name:`防振ゴムの足 ${D.feet.size}角×高さ${D.feet.h}`,area:null,qty:acc.feet||0,unit:'個'},
+    {key:'gasket',name:'すきまテープ（扉とふたのまわり）',area:null,qty:Math.ceil(gasket*10)/10,unit:'m'},
+    {key:'hinge',name:'蝶番（扉3・ふた4）',area:null,qty:7,unit:'個'},{key:'latch',name:'締め金具（扉1・ふた2）',area:null,qty:3,unit:'個'}];
+  return {rows,left};
+}
+(function bomTable(){const t=$('c16-bom');for(const r of bom().rows){const tr=t.insertRow(),th=document.createElement('th');th.textContent=r.name;tr.append(th);
+  tr.insertCell().textContent=r.unit==='㎡'?`約 ${r.area} ㎡`:r.unit==='枚'&&r.area!=null&&r.key!=='desk'?`約 ${r.area} ㎡ → ${r.qty} 枚`:`${r.qty} ${r.unit}`;}})();
+
+// Drawing consistency: the header numbers, the 2D drawings, the 3D model and the air paths must agree.
+function C16_CHECK(){
+  const R=[],ok=(name,cond,detail)=>R.push({name,ok:!!cond,detail}),fmt=n=>n.toLocaleString('en-US');
+  const m=model({doorOpen:false,lidOpen:false,air:false,hide:new Set()}),boxes=m.filter(b=>b.v),Z=y=>OH-W-y;
+  const sub=document.querySelector('#c16 .c16-sub').textContent;
+  ok('見出しの寸法',sub.includes(`室内 幅${fmt(D.in.w)} × 奥行${fmt(D.in.d)} × 高さ${fmt(D.in.h)}mm`)&&sub.includes(`外寸 幅${fmt(OW)} × 奥行${fmt(OD)} × 高さ${fmt(OH)}mm`)&&sub.includes(`防振ゴムの足${D.feet.h}`),`室内 ${D.in.w}×${D.in.d}×${D.in.h}／外寸 ${OW}×${OD}×${OH}／足 ${D.feet.h}`);
+  const body=boxes.filter(b=>!b.c.join().startsWith(C.rubber.join())),lo=[0,1,2].map(k=>Math.min(...body.map(b=>boundsOf(b.v)[0][k]))),hi=[0,1,2].map(k=>Math.max(...body.map(b=>boundsOf(b.v)[1][k])));
+  ok('3Dの外の大きさ',lo.every(x=>Math.abs(x)<0.5)&&Math.abs(hi[0]-OW)<0.5&&Math.abs(hi[1]-OD)<0.5&&Math.abs(hi[2]-OH)<0.5,`3D ${hi.map(Math.round).join('×')}／計算 ${OW}×${OD}×${OH}`);
+  const feet=boxes.filter(b=>b.c.join()===C.rubber.join());ok('3Dの足',feet.length===D.feet.n**2&&feet.every(b=>{const [l,h]=boundsOf(b.v);return Math.round(h[2]-l[2])===D.feet.h&&Math.round(h[0]-l[0])===D.feet.size;}),`${feet.length} 個・高さ ${D.feet.h}`);
+  const dk=boxes.find(b=>[].concat(b.g).includes('desk')),[dl,dh]=boundsOf(dk.v),planDesk=[...$('c16-plan').querySelectorAll('text')].find(t=>t.textContent.startsWith('机（'));
+  ok('机（3D・上から見た図）',Math.round(dh[1]-dl[1])===D.desk.d&&Math.round(dh[2]-W)===D.desk.h&&!!planDesk&&planDesk.textContent===`机（奥行${D.desk.d}・高さ${D.desk.h}）`,`奥行 ${Math.round(dh[1]-dl[1])}・高さ ${Math.round(dh[2]-W)}／図 ${planDesk?planDesk.textContent:'なし'}`);
+  const parts3=boxes.filter(b=>[].concat(b.g).includes('sil')).map(b=>boundsOf(b.v)),match=SIL.parts.every(([x,y,w,h])=>parts3.some(([l,hh])=>Math.abs(l[0]-W-x)<0.5&&Math.abs(hh[0]-W-x-w)<0.5&&Math.abs(hh[2]-Z(y))<0.5&&Math.abs(l[2]-Z(y+h))<0.5));
+  ok('消音箱の仕切り（2Dと3D）',parts3.length===SIL.parts.length&&match,`3D ${parts3.length} 枚／2D ${SIL.parts.length} 枚`);
+  const H=m.holes,circ=[...$('c16-sil').querySelectorAll('circle')].map(c=>[c.getAttribute('cx')-W,c.getAttribute('cy')-W]);
+  const room=H.filter(h=>h.axis===1),port=H.filter(h=>h.axis===0);
+  ok('部屋との穴（2Dと3D）',room.length===2&&circ.length===2&&room.every(h=>circ.some(([x,y])=>Math.abs(h.c[0]-W-x)<0.5&&Math.abs(OH-W-h.c[2]-y)<0.5)),`3D ${room.length} 個／2D ${circ.length} 個`);
+  const prt=[...$('c16-sil').querySelectorAll('rect')].filter(r=>+r.getAttribute('x')===0&&+r.getAttribute('width')===W&&+r.getAttribute('height')===D.port).map(r=>+r.getAttribute('y')+D.port/2-W);
+  ok('外との口（2Dと3D）',port.length===2&&prt.length===2&&port.every(h=>prt.some(y=>Math.abs(OH-W-h.c[2]-y)<0.5)),`3D ${port.length} 個／2D ${prt.length} 個`);
+  const inL=SIL.labels.filter(l=>l[3]==='in'),outL=SIL.labels.filter(l=>l[3]==='out');
+  ok('部屋の数（給気5・排気5）',inL.length===5&&outL.length===5&&inL.every(l=>l[2]<SIL.zone)&&outL.every(l=>l[2]>SIL.y0),`給気 ${inL.length}・排気 ${outL.length}`);
+  // a segment crosses a partition (shrunk by 1mm) => the drawn air path goes through a wall
+  const hit=(a,b,[x,y,w,h])=>{let t0=0,t1=1;const dx=b[0]-a[0],dy=b[1]-a[1];for(const [p,q] of [[-dx,a[0]-(x+1)],[dx,x+w-1-a[0]],[-dy,a[1]-(y+1)],[dy,y+h-1-a[1]]]){if(p===0){if(q<0)return false;continue;}const t=q/p;if(p<0)t0=Math.max(t0,t);else t1=Math.min(t1,t);if(t0>t1)return false;}return true;};
+  const cross=pts=>pts.slice(1).some((b,i)=>SIL.parts.some(r=>hit(pts[i],b,r)));
+  ok('空気の通り道が仕切りを通り抜けない',!cross(SIL.flowIn)&&!cross(SIL.flowOut),'給気・排気の線');
+  const holeHit=([hx,hy])=>SIL.parts.some(([x,y,w,h])=>hx+D.hole/2>x&&hx-D.hole/2<x+w&&hy+D.hole/2>y&&hy-D.hole/2<y+h);
+  ok('穴が仕切りにかからない',!holeHit(SIL.holeIn)&&!holeHit(SIL.holeOut),`φ${D.hole} × 2`);
+  return R;
+}
+window.C16_CHECK=C16_CHECK;
+function checkTable(){const t=$('c16-check');t.textContent='';const R=C16_CHECK(),bad=R.filter(x=>!x.ok).length;
+  $('c16-check-sum').textContent=bad?`食い違いが ${bad} 件あります（✗の行）。`:`${R.length} 項目すべてそろっています。`;
+  for(const r of R){const tr=t.insertRow(),th=document.createElement('th');th.textContent=(r.ok?'✓ ':'✗ ')+r.name;th.style.color=r.ok?'#2c7a4b':'#c0392b';tr.append(th);tr.insertCell().textContent=r.detail;}}
+checkTable();
+window.C16_TEST={bom,dims:{yBack,ySil,top:OH-W,OH,mid:OW/2,ia:D.ply.outer+D.ply.air,ib:D.ply.outer+D.ply.air+D.ply.inner,o:D.ply.outer},wool:C.wool,model:()=>model(st),screen:(pt)=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,q=proj(pt);return [Wc/2+q.x*sc,Hc/2+10-q.y*sc];},holes:()=>model(st).holes,holeRings:()=>{const sc=Math.min(Wc,Hc)/2400*st.zoom,S=q=>[Wc/2+q.x*sc,Hc/2+10-q.y*sc];return model(st).holes.flatMap(h=>[h.a0,h.a1].map(a=>ring(h,a).map(p=>S(proj(p)))));},view:(o)=>{Object.assign(st,o);draw();return lastPrims;}};
 })();
 </script></body></html>
